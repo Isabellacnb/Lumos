@@ -1,0 +1,33 @@
+
+lumos DemoProgram;
+vars
+int i , j;
+int mat[3][3];
+
+!! - This is the first comment
+!! - This is the second comment
+
+task max(int a , int b) : int {
+    if (a >= b) {
+        a = a + 1;
+        return a;
+    } else {
+        return b;
+    }
+}
+
+main {
+    vars
+    int x, i;
+    x = 10;
+
+    read(max(x, i));
+
+    
+    while (true) {
+        i = i + 1;
+    }
+    
+}
+
+nox;

@@ -1,0 +1,16 @@
+
+lumos DemoProgram;
+vars
+int i , j;
+
+main {
+    vars
+    x = 10;
+    
+    for (i = 0; i < x) {
+        print(max(i, i + 1));
+    }
+    
+}
+
+nox;

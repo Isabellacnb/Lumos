@@ -3,16 +3,17 @@
 # 
 # -- Lumos : lexical rules 
 
+import ply.lex as lex
 
 # Reserved words
 reserved = {
     # General tokens
     'lumos' : 'LUMOS',
-    'var' : 'VAR',
+    'vars' : 'VARS',
     'true' : 'TRUE',
     'false' : 'FALSE',
     'print' : 'PRINT',
-    'write' : 'WRITE',
+    'read' : 'READ',
     'and' : 'AND',
     'or' : 'OR',
     'nox' : 'NOX',
@@ -20,6 +21,7 @@ reserved = {
     # Function tokens
     'return' : 'RETURN',
     'task' : 'TASK',
+    'void' : 'VOID',
     'main' : 'MAIN',
     # 'break' : 'BREAK',
     # 'continue' : 'CONTINUE',
@@ -66,6 +68,9 @@ t_NE = r'<>'
 t_GTE = r'>='
 t_LTE = r'<='
 
+# Comments
+t_ignore_COMMENT = r'\!\!\ \-.*\n'
+
 # Regular expressions
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
@@ -73,20 +78,35 @@ def t_ID(t):
     return t
 
 # Ignore white spaces and tabs
-t_ignore = r' \t'
+t_ignore = " \t"
 
 # New lines
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-# Comments
-def t_COMMENT(t):
-    r'\!\! \-'
-    pass
-    # No return value. Token discarded
 
 # Error handling
 def t_error(t):
-    print("Illegal character: '%s'" % t.value[0])
+    print("Illegal character: '%s' in line '%d' " % (t.value[0], t.lineno))
     t.lexer.skip(1)
+
+lexer = lex.lex()
+
+if __name__ == "__main__":
+    try:
+        f = open("demoshort.nox", "r")
+        file = f.read()
+        f.close()
+    except EOFError:
+        quit()
+    
+    # Give the lexer some input
+    lexer.input(file)
+
+    # Tokenize
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break      # No more input
+        print(tok)

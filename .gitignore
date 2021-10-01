@@ -1,0 +1,4 @@
+# Parser output files
+*parser.out
+/__pycache__
+parsetab.py

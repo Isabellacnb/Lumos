@@ -1,4 +1,8 @@
 # Parser output files
 *parser.out
-/__pycache__
+
+**/__pycache__
 parsetab.py
+
+# General
+.DS_Store

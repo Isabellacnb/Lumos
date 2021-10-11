@@ -1,7 +1,8 @@
 # -------------- scanner.py --------------
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
-# -- Lumos : lexical rules 
+# -- Lumos : Lexical Rules 
+# ----------------------------------------
 
 import ply.lex as lex
 
@@ -23,8 +24,6 @@ reserved = {
     'task' : 'TASK',
     'void' : 'VOID',
     'main' : 'MAIN',
-    # 'break' : 'BREAK',
-    # 'continue' : 'CONTINUE',
 
     # Conditional tokens
     'if' : 'IF',

@@ -2,6 +2,7 @@
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : grammar rules 
+# ----------------------------------------
 
 
 import scanner

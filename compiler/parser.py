@@ -198,6 +198,7 @@ def p_empty(p):
   pass
 
 
+
 # Build the lexer
 lex.lex(module=scanner)
 tokens = scanner.tokens
@@ -207,7 +208,7 @@ yacc.yacc()
 
 if __name__ == '__main__':
     try:
-        f = open("demofile.nox", "r")
+        f = open("/samples/demofile.nox", "r")
         file = f.read()
         f.close()
     except EOFError:

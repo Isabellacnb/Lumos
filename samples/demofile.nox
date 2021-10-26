@@ -18,11 +18,11 @@ task max(int a , int b) : int {
 
 main {
     vars
-    int x, i;
+    int x, i, text;
     x = 10;
+    text = "hello";
 
-    read(max(x, i));
-
+    print(max(x, i));
     
     while (true) {
         i = i + 1;

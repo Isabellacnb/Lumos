@@ -10,6 +10,9 @@ class Variable:
         self.type = type
         self.address = -1
         self.value = None
+    
+    def __str__(self) -> str:
+        return "[" + self.name + " " + str(self.type) + " " + str(self.address) + "]"
 
 class VariableTable:
     def __init__(self):
@@ -27,10 +30,20 @@ class VariableTable:
         else:
             self.variables[variable.name] = variable
             return self.variables[variable.name]
-        return 0;
+        return 0
     
     def clear(self):
         self.variables.clear()
+    
+    def __str__(self) -> str:
+        string = "{\n"
+        for var in self.variables.values():
+            string += str(var) + "\n"
+        
+        return string + "}";
+
+
+
         
 
         

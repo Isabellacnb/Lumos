@@ -33,10 +33,12 @@ varsLocal = VariableTable()
 # Function Tables
 functions = FunctionDirectory()
 
+# Scope
+scope = Scope.GLOBAL
 
 ## Grammar Rules
 def p_programa(p):
-	'''program : LUMOS ID ";" prog_vars prog_func main NOX ";"'''
+	'''program : LUMOS ID ";" prog_vars prog_func setScopeLocal main setScopeGlobal NOX ";"'''
 
 def p_prog_vars(p):
     '''prog_vars : vars 
@@ -48,24 +50,29 @@ def p_prog_func(p):
 
 # Variables
 # ========================
+# tStack =  
+# Poper = 
+# saveVariable = i j text
 def p_vars(p):
     '''vars : VARS vars_line'''
 
 def p_vars_line(p):
-    '''vars_line : type saveVarType var_list delVarType ";" vars_line2'''
+    '''vars_line : type saveVarType var_list ";" delVarType vars_mult_lines'''
 
-def p_vars_line2(p):
-    '''vars_line2 : vars_line 
+def p_vars_mult_lines(p):
+    '''vars_mult_lines : vars_line 
                     | empty'''
 
+# TODO: array dimensions
 def p_var_list(p):
-    '''var_list : ID saveVarName var_array delVarName var_comma'''
+    '''var_list : ID saveVarName storeVar var_array delVarName var_comma'''
 
 
 def p_var_comma(p):
     '''var_comma : "," var_list 
                 | empty'''
 
+# TODO: array dimensions
 def p_var_array(p):
     '''var_array : array_dim 
                 | empty'''
@@ -97,7 +104,6 @@ def p_var_cte(p):
                 | bool
                 | call_func
                 | ID id_dim'''
-    print(p[1])
 
 def p_bool(p):
     '''bool : TRUE
@@ -110,22 +116,18 @@ def p_bool(p):
 def p_cte_int(p):
     "cte : CTE_INT"
     p[0] = int(p[1])
-    print(p[0])
 
 def p_cte_float(p):
     "cte : CTE_FLOAT"
     p[0] = float(p[1])
-    print(p[0])
 
 def p_cte_string(p):
     "cte : CTE_STRING"
     p[0] = str(p[1])
-    print(p[0])
 
 def p_cte_char(p):
     "cte : CTE_CHAR"
     p[0] = chr(p[1])
-    print(p[0])
 
 def p_id_dim(p):
     '''id_dim : array_dim
@@ -150,6 +152,7 @@ def p_mul_write(p):
 
 def p_assign(p):
     '''assign : ID "=" expression'''
+
 
 def p_expression(p):
     '''expression : exp expr'''
@@ -233,6 +236,7 @@ def p_param2(p):
 
 def p_call_func(p):
     '''call_func : ID "(" expression call_exp ")"'''
+    p[0] = p[1]
 
 def p_call_exp(p):
     '''call_exp : "," expression call_exp
@@ -261,6 +265,19 @@ def p_empty(p):
   'empty :'
   pass
 
+# Scope Managament
+# =============================
+
+def p_setScopeLocal(p):
+  'setScopeLocal :'
+  global scope 
+  scope = Scope.LOCAL
+
+def p_setScopeGlobal(p):
+  'setScopeGlobal :'
+  global scope 
+  scope = Scope.GLOBAL
+
 # Variable Quadruple Generation
 # =============================
 def p_saveVarType(p):
@@ -273,9 +290,29 @@ def p_delVarType(p):
 
 def p_saveVarName(p):
     'saveVarName :'
+    tVarName.push(p[-1])
 
 def p_delVarName(p):
     'delVarName :'
+    tVarName.pop()
+
+def p_storeVar(p):
+    'storeVar :'
+    createVariable(tVarName.top(), tVarType.top())
+
+
+# Lumos Logic
+# =============================
+def createVariable(name, type):
+    global varsGlobal, varsLocal
+    var = Variable(name, type);
+    if scope == Scope.GLOBAL:
+        varsGlobal.insert(var)
+        # TODO: Address addition
+    elif scope == Scope.LOCAL:
+        varsLocal.insert(var)
+        # TODO: Address addition
+    print(name)
 
 
 # Build the lexer
@@ -297,3 +334,7 @@ if __name__ == '__main__':
     #Parse the file using grammar
     yacc.parse(file)
     print("Sucessfully parsed...")
+    print("GLOBAL")
+    print(str(varsGlobal))
+    print("LOCAL")
+    print(str(varsLocal))

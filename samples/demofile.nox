@@ -2,7 +2,7 @@
 lumos DemoProgram;
 vars
 int i , j;
-int mat[3][3];
+bool check;
 
 !! - This is the first comment
 !! - This is the second comment
@@ -18,8 +18,9 @@ task max(int a , int b) : int {
 
 main {
     vars
-    int x, i, text;
-    x = 10;
+    int x, i;
+    string text;
+    x = 10.5;
     text = "hello";
 
     print(max(x, i));

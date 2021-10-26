@@ -13,6 +13,7 @@ class Type(Enum):
     FLOAT = 2
     CHAR = 3
     STRING = 4
+    VOID = 5
 
 cube = {}
 

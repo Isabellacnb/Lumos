@@ -7,3 +7,6 @@
 ### 10/10/2021 - Avance 2 (Semántica Básica de Variables y Cubo Semántico)
 
 ### 16/10/2021 - Avance 3 (Generación de Código de Expresiones y Estatutos)
+
+### 22/10/2021 - Avance 4 (Generación de Código de Estatutos Condicionales y Cíclicos)
+

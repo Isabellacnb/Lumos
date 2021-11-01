@@ -75,6 +75,7 @@ def p_var_array(p):
                 | empty'''
 
 # Arrays
+# TODO: arrays
 # ========================
 def p_array_dim(p):
     '''array_dim : "[" exp "]" mult_dim'''
@@ -84,14 +85,15 @@ def p_mult_dim(p):
                 | empty'''
 
 def p_stmt(p):
-    '''stmt : condition 
+    '''stmt : if
+            | while
+            | loop
             | stmt_endl ";"'''
 
 def p_stmt_endl(p):
     '''stmt_endl : assign 
                 | write 
                 | return 
-                | loop 
                 | call_func 
                 | read'''
 
@@ -204,7 +206,7 @@ def p_type(p):
         p[0] = Type.BOOL
 
 def p_func(p):
-    '''func : TASK ID "(" param ")" ":" type_func section'''
+    '''func : TASK setLocalScope ID saveFunctionName "(" param ")" ":" type_func saveFunctionType addFunction section setGlobalScope'''
 
 def p_section(p):
     '''section : "{" prog_vars stmt mul_sec "}"'''
@@ -217,6 +219,7 @@ def p_type_func(p):
     '''type_func : type
                 | VOID'''
 
+# TODO: check for functions without parameters
 def p_param(p):
     '''param : type ID mult_params'''
 
@@ -232,16 +235,19 @@ def p_call_mult_exp(p):
     '''call_mult_exp : "," super_expression call_mult_exp
                 | empty'''
 
+
 def p_loop(p):
     '''loop : FOR "(" assign ";" super_expression ")" section'''
 
-def p_condition(p):
-    '''condition : IF "(" super_expression ")" section cond_else
-                | WHILE "(" super_expression ")" section'''
+def p_if(p):
+    '''if : IF "(" super_expression ")" tryIfCondition section if_else endIfCondition'''
 
-def p_cond_else(p):
-    '''cond_else : ELSE section
+def p_if_else(p):
+    '''if_else : ELSE tryElseCondition section
                 | empty'''
+
+def p_while(p):
+    '''while : WHILE whileCondition "(" super_expression ")" tryWhileCondition section endWhileCondition'''
 
 # Error rule for syntax errors
 def p_error(p):
@@ -371,7 +377,7 @@ def p_logicalQuadruple(p):
 # TODO: should != be NE
 def p_relationalQuadruple(p):
     'relationalQuadruple :'
-    generateQuadrupleExpression(['<', '>', 'EQ', 'NE', 'LTE', 'GTE'])
+    generateQuadrupleExpression(['<', '>', '==', '!=', '<=', '>='])
 
 def p_addsubQuadruple(p):
     'addsubQuadruple :'
@@ -432,6 +438,66 @@ def p_addReadQuadruple(p):
     inputValue = operandStack.pop()
     typeStack.pop()
     quadruple_list.push(Quadruple("READ", None, None, inputValue))
+
+# Condition logic
+# =============================
+def p_tryIfCondition(p):
+    'tryIfCondition :'
+    expResult = operandStack.pop()
+    expType = typeStack.pop()
+    if expType != Type.BOOL:
+        print("Error: Result type mismatch")
+        return
+    else:
+        quadruple_list.push(Quadruple("GOTOF", expResult, None, -1))
+        Quadruple()
+        jumpStack.push(quadruple_list.size() - 1)
+
+def p_endIfCondition(p):
+    'endIfCondition :'
+    assignJump(quadruple_list.size())
+
+def p_tryElseCondition(p):
+    'tryElseCondition :'
+    quadruple_list.push(Quadruple("GOTO", None, None, -1))
+    goToFIndex = jumpStack.pop()
+    jumpStack.push(quadruple_list.size() - 1)
+    assignJump(goToFIndex)
+
+def p_whileCondition(p):
+    'whileCondition :'
+    jumpStack.push(quadruple_list.size())
+
+def p_tryWhileCondition(p):
+    'tryWhileCondition : tryIfCondition'
+
+def p_endWhileCondition(p):
+    'endWhileCondition :'
+    goToFIndex = jumpStack.pop()
+    cycleBack = jumpStack.pop()
+    quadruple_list.push(Quadruple("GOTO", None, None, cycleBack))
+    goToFQuad = quadruple_list[goToFIndex]
+    goToFQuad.result = quadruple_list.size()
+
+def assignJump(position):
+    jump = jumpStack.pop()
+    goToFQuad = quadruple_list[jump]
+    goToFQuad.result = position
+
+# Function logic
+# =============================
+def p_saveFunctionName(p):
+    'saveFunctionName :'
+    global tFuncName
+    tFuncName = p[-1]
+
+def p_saveFunctionType(p):
+    'saveFunctionType :'
+    global tFuncType
+    tFuncType = p[-1]
+
+def p_addFunction(p):
+    return
 
 # Lumos Logic
 # =============================

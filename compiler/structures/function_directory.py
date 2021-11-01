@@ -5,11 +5,12 @@
 # -----------------------------------------------
 
 class Function:
-    def __init__(self, name, type, parameters, varTable):
+    def __init__(self, name, type, parameters, quadruplePosition, memoryLimits):
         self.name = name
         self.type = type
         self.parameters = parameters
-        self.varTable = varTable
+        self.quadruplePosition = quadruplePosition
+        self.limits = memoryLimits
 
 class FunctionDirectory:
     def __init__(self):

@@ -15,7 +15,10 @@ class Stack:
         self.items.clear()
 
     def top(self):
-        return self.items[-1]
+        if len(self.items) == 0:
+            print("STACK EMPTY")
+        else:
+            return self.items[-1]
 
     def size(self):
         return len(self.items)

@@ -14,6 +14,7 @@ reserved = {
     'true' : 'TRUE',
     'false' : 'FALSE',
     'print' : 'PRINT',
+    'println' : 'PRINTLN',
     'read' : 'READ',
     'and' : 'AND',
     'or' : 'OR',

@@ -145,10 +145,10 @@ cube['BOOLandBOOL'] = Type.BOOL
 # Or
 cube['BOOLorBOOL'] = Type.BOOL
 
-def getResultType(left, operand, right):
+def getResultType(left, operator, right):
   l = left.name
   r = right.name
-  key = l + operand + r
+  key = l + operator + r
   if key in cube.keys():
     return cube[key]
   else:

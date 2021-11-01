@@ -18,9 +18,9 @@ class VariableTable:
     def __init__(self):
         self.variables = {}
 
-    def find(self, variable):
-        if variable.name in self.variables:
-            return self.variables[variable.name]
+    def find(self, name):
+        if name in self.variables:
+            return self.variables[name]
         else:
             return None
 

@@ -14,7 +14,7 @@ import ply.yacc as yacc
 from structures import *
 
 # Setup
-operandStack = Stack()
+operandStack = Stack() # poper
 operatorStack = Stack()
 typeStack = Stack()
 quadruples = QuadrupleList()
@@ -50,9 +50,6 @@ def p_prog_func(p):
 
 # Variables
 # ========================
-# tStack =  
-# Poper = 
-# saveVariable = i j text
 def p_vars(p):
     '''vars : VARS vars_line'''
 
@@ -79,7 +76,6 @@ def p_var_array(p):
 
 # Arrays
 # ========================
-
 def p_array_dim(p):
     '''array_dim : "[" exp "]" mult_dim'''
 
@@ -98,24 +94,6 @@ def p_stmt_endl(p):
                 | loop 
                 | call_func 
                 | read'''
-##faltan call func y ID
-def p_var_cte(p):
-    '''var_cte : cte
-                | bool
-                | call_func
-                | ID id_dim'''
-
-def p_bool(p):
-    '''bool : TRUE
-            | FALSE'''
-    if p[1] == 'true':
-        p[0] = True
-    elif p[1] == 'false':
-        p[0] = False
-
-def p_cte_int(p):
-    "cte : CTE_INT"
-    p[0] = int(p[1])
 
 def p_cte_float(p):
     "cte : CTE_FLOAT"
@@ -134,67 +112,79 @@ def p_id_dim(p):
                 | empty'''
 
 def p_return(p):
-    '''return : RETURN expression'''
+    '''return : RETURN super_expression'''
 
+# TODO: CHECK
+# TODO: INPUT WITH INDEX SELECTOR
 def p_read(p):
-    '''read : READ "(" expression ")"'''
+    '''read : READ "(" ID lookupID addOperandId delVarName delVarType ")" addReadQuadruple '''
 
 def p_main(p):
     '''main : MAIN section'''
 
 def p_write(p):
-    '''write : PRINT "(" expression mul_write ")"
-    '''
+    '''write : PRINT "(" super_expression addPrintQuadruple mul_write ")"
+            | PRINTLN "(" super_expression addPrintQuadruple mul_write addNewLineQuadruple ")"'''
 
 def p_mul_write(p):
-    '''mul_write : "," expression mul_write
+    '''mul_write : "," super_expression addPrintQuadruple mul_write
                 | empty'''
 
 def p_assign(p):
-    '''assign : ID "=" expression'''
+    '''assign : ID lookupID addOperandId delVarName delVarType "=" addOperator super_expression addAssignQuadruple'''
 
+def p_super_expression(p):
+    '''super_expression : expression logicalQuadruple
+                        | expression logicalQuadruple AND addOperator super_expression
+                        | expression logicalQuadruple OR addOperator super_expression'''    
 
 def p_expression(p):
-    '''expression : exp expr'''
-
-def p_expr(p):
-    '''expr : expr_symbol exp 
-            | empty'''
-
-def p_expr_symbol(p):
-    '''expr_symbol : ">"
-                    | "<"
-                    | NE
-                    | EQ
-                    | AND
-                    | OR
-                    | LTE
-                    | GTE'''
+    '''expression : exp relationalQuadruple
+                | exp relationalQuadruple '>' addOperator expression
+                | exp relationalQuadruple '<' addOperator expression
+                | exp relationalQuadruple NE addOperator expression
+                | exp relationalQuadruple EQ addOperator expression
+                | exp relationalQuadruple LTE addOperator expression
+                | exp relationalQuadruple GTE addOperator expression'''
 
 def p_exp(p):
-    ''' exp : term exp_symb'''
-
-def p_exp_symb(p):
-    '''exp_symb : "+" exp 
-                | "-" exp 
-                | empty'''
+    ''' exp : term addsubQuadruple
+            | term addsubQuadruple '+' addOperator exp    
+            | term addsubQuadruple '-' addOperator exp'''  
 
 def p_term(p):
-    '''term : factor term_symb'''
+    '''term : factor_sign multdivQuadruple
+            | factor_sign multdivQuadruple '*' addOperator term
+            | factor_sign multdivQuadruple '/' addOperator term
+            | factor_sign multdivQuadruple '%' addOperator term'''
 
-def p_term_symb(p):
-    '''term_symb : "*" term
-                | "/" term
-                | empty'''
+def p_factor_sign(p):
+    '''factor_sign : factor
+                    | "-" factor minusQuadruple'''     
 
 def p_factor(p):
-    '''factor : "(" expression ")"
-                | var_symb'''
+    '''factor : '(' addBottom super_expression delBottom ')'
+                | value'''
 
-def p_var_symb(p):
-    '''var_symb : var_cte
-                | "+" var_cte
-                | "-" var_cte'''
+# TODO: ID with index selector
+# TODO: call_func and ID
+def p_value(p):
+    '''value : cte addCte addOperandCte
+            | call_func
+            | ID lookupID addOperandId delVarName delVarType 
+            | ID id_dim'''
+
+def p_cte_int(p):
+    "cte : CTE_INT"
+    p[0] = int(p[1])
+
+def p_cte_bool(p):
+    '''cte : TRUE
+        | FALSE'''
+    if p[1] == 'true':
+        p[0] = True
+    elif p[1] == 'false':
+        p[0] = False
 
 def p_type(p):
     '''type : INT
@@ -228,26 +218,26 @@ def p_type_func(p):
                 | VOID'''
 
 def p_param(p):
-    '''param : type ID param2'''
+    '''param : type ID mult_params'''
 
-def p_param2(p):
-    '''param2 : "," param
+def p_mult_params(p):
+    '''mult_params : "," param
             | empty'''
 
 def p_call_func(p):
-    '''call_func : ID "(" expression call_exp ")"'''
+    '''call_func : ID "(" super_expression call_mult_exp ")"'''
     p[0] = p[1]
 
-def p_call_exp(p):
-    '''call_exp : "," expression call_exp
+def p_call_mult_exp(p):
+    '''call_mult_exp : "," super_expression call_mult_exp
                 | empty'''
 
 def p_loop(p):
-    '''loop : FOR "(" assign ";" expression ")" section'''
+    '''loop : FOR "(" assign ";" super_expression ")" section'''
 
 def p_condition(p):
-    '''condition : IF "(" expression ")" section cond_else
-                | WHILE "(" expression ")" section'''
+    '''condition : IF "(" super_expression ")" section cond_else
+                | WHILE "(" super_expression ")" section'''
 
 def p_cond_else(p):
     '''cond_else : ELSE section
@@ -300,6 +290,148 @@ def p_storeVar(p):
     'storeVar :'
     createVariable(tVarName.top(), tVarType.top())
 
+# Arithmetic Quadruple Generation
+# =============================
+
+def p_addOperandId(p):
+    'addOperandId :'
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(tVarName.top())
+        if var is None:
+            print(tVarName.top(), "is not a global variable!")
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(tVarName.top())
+        if var is None:
+            var = varsGlobal.find(tVarName.top())
+        if var is None:
+            print(tVarName.top(), "is not a local or global variable!")
+    operandStack.push(tVarName.top())
+    typeStack.push(tVarType.top())
+
+def p_addCte(p):
+    'addCte : '
+    cte = p[-1]
+    # TODO: addConstant(cte) #add constant and generate new address
+
+# TODO: pushConstantOperand --> needs a constant table to push constant adress to operandStack
+def p_addOperandCte(p):
+    'addOperandCte :'
+    constantName = str(p[-2])
+    constantType = -1
+    # constant lookup in constant table with name
+    operandStack.push(constantName)
+    typeStack.push(constantType)
+
+def p_addOperator(p):
+    'addOperator :'
+    operatorStack.push(p[-1])
+
+def p_lookupID(p):
+    'lookupID :'
+    operandID = p[-1]
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(operandID)
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(operandID)
+        if var is None:
+            var = varsGlobal.find(operandID)
+    
+    if var is None:
+        print("Error: Variable not found!")
+        return
+    else:
+        print("Found: " + str(var))
+
+
+# type = int int
+# operand = a b
+# operator = +
+def generateQuadrupleExpression(operators):
+    global operandStack, operatorStack, typeStack
+    operator = operatorStack.top()
+    if operator in operators:
+        operator = operatorStack.pop()
+        operRight = operandStack.pop()
+        operLeft = operandStack.pop()
+        typeRight = typeStack.pop()
+        typeLeft = typeStack.pop()
+        resultType = getResultType(typeLeft, operator, typeRight)
+        # TODO: Check if global or local temporary variable
+        quadruple = Quadruple(operator, operLeft, operRight, -1)
+        quadruples.push(quadruple)
+        # Push temporary
+        typeStack.push(resultType)
+        # TODO: push temporary variable to operand stack (address)
+        print(str(quadruple) + " " + resultType)
+
+def p_logicalQuadruple(p):
+    'logicalQuadruple :'
+    generateQuadrupleExpression(['and', 'or'])
+
+# TODO: should != be NE
+def p_relationalQuadruple(p):
+    'relationalQuadruple :'
+    generateQuadrupleExpression(['<', '>', 'EQ', 'NE', 'LTE', 'GTE'])
+
+def p_addsubQuadruple(p):
+    'addsubQuadruple :'
+    generateQuadrupleExpression(['+', '-'])
+
+def p_multdivQuadruple(p):
+    'multdivQuadruple :'
+    generateQuadrupleExpression(['*', '/', '%'])
+
+def p_minusQuadruple(p):
+    'minusQuadruple :'
+    rightOperand = operandStack.pop()
+    type = typeStack.pop()
+    if type is Type.STRING or type is Type.CHAR or type is Type.BOOL:
+        print("Can't negate expression.")
+        return
+    # TODO: addCte(-1) lookup constant in constant table
+    # get symbol
+    # check scope and generate temporary
+    #quadruple_list.push(Quadruple('*', -1, rightOperand, -1))
+    # push temporary to operand stack
+    # push result type to type stack
+
+def p_addBottom(p):
+    'addBottom :'
+    operatorStack.push('(')
+
+def p_delBottom(p):
+    'delBottom :'
+    operatorStack.pop()
+
+def p_addAssignQuadruple(p):
+    'addAssignQuadruple :'
+    operator = operatorStack.pop()
+    rightOperand = operandStack.pop()
+    leftOperand = operandStack.pop()
+    rightType = typeStack.pop()
+    leftType = typeStack.pop()
+    resultType = getResultType(leftType, operator, rightType)
+    if resultType is not None:
+        quadruple_list.push(Quadruple(operator, rightOperand, None, leftOperand))
+    else:
+        print("Error: Result type mismatch")
+        return
+
+def p_addPrintQuadruple(p):
+    'addPrintQuadruple :'
+    output = operandStack.pop()
+    typeStack.pop()
+    quadruple_list.push(Quadruple("PRINT", None, None, output))
+
+def p_addNewLineQuadruple(p):
+    'addNewLineQuadruple :'
+    quadruple_list.push(Quadruple("PRINTLN", None, None, None, None))
+
+def p_addReadQuadruple(p):
+    'addReadQuadruple :'
+    inputValue = operandStack.pop()
+    typeStack.pop()
+    quadruple_list.push(Quadruple("READ", None, None, inputValue))
 
 # Lumos Logic
 # =============================
@@ -334,7 +466,7 @@ if __name__ == '__main__':
     #Parse the file using grammar
     yacc.parse(file)
     print("Sucessfully parsed...")
-    print("GLOBAL")
-    print(str(varsGlobal))
-    print("LOCAL")
-    print(str(varsLocal))
+    # print("GLOBAL")
+    # print(str(varsGlobal))
+    # print("LOCAL")
+    # print(str(varsLocal))

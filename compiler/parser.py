@@ -14,27 +14,34 @@ import ply.yacc as yacc
 from structures import *
 
 # Setup
-operandStack = Stack() # poper
+quadruples = QuadrupleList()
+operandStack = Stack()
 operatorStack = Stack()
 typeStack = Stack()
-quadruples = QuadrupleList()
 jumpStack = Stack()
 
-# Temporary
+# Temporary Var data
 tVarName = Stack()
 tVarType = Stack()
+# Temporary Function data
 tFuncName = Stack()
 tFuncType = Stack()
+tFuncParameters = []
+tFuncCallName = Stack()
+tFuncCallType = Stack()
+tFuncCallArgs = Stack()
 
 # Variable Tables
 varsGlobal = VariableTable()
 varsLocal = VariableTable()
 
 # Function Tables
-functions = FunctionDirectory()
+dirFuncs = FunctionDirectory()
 
 # Scope
 scope = Scope.GLOBAL
+
+# TODO: Address system declaration
 
 # =================================
 # Grammar Rules #
@@ -187,7 +194,7 @@ def p_factor_sign(p):
 
 # Rule to determine order with parenthesis
 def p_factor(p):
-    '''factor : '(' addBottom super_expression delBottom ')'
+    '''factor : '(' addFakeBottom super_expression delFakeBottom ')'
                 | value'''
 
 # TODO: ID with index selector
@@ -244,7 +251,7 @@ def p_main(p):
 # Rule to write a function
 # TODO: falta addfunction despues de saveFunctionType
 def p_func(p):
-    '''func : TASK setScopeLocal ID saveFunctionName "(" param ")" ":" type_func saveFunctionType section setScopeGlobal'''
+    '''func : TASK setScopeLocal ID saveFunctionName "(" param ")" ":" type_func saveFunctionType addFunction section endFunction setScopeGlobal'''
 
 # Rule to set structure of a function with brackets, variable definition and statements
 def p_section(p):
@@ -259,25 +266,30 @@ def p_mul_sec(p):
 def p_type_func(p):
     '''type_func : type
                 | VOID'''
+    if(p[1] == 'void'):
+        p[0] = Type.VOID
 
 # TODO: check for functions without parameters
 # Rule to define function parameter
 def p_param(p):
-    '''param : type ID mult_params'''
+    '''param : type ID addParameter mult_params'''
 
 # Rule to call for multiple function parameters
 def p_mult_params(p):
-    '''mult_params : "," param
+    '''mult_params : "," type ID addParameter mult_params
             | empty'''
 
 # Rule to call a function
 def p_call_func(p):
-    '''call_func : ID "(" super_expression call_mult_exp ")"'''
-    p[0] = p[1]
+    '''call_func : ID lookupFunc generateEra "(" addFakeBottom params delFakeBottom ")" verifyArguments generateGoSub '''
+
+def p_params(p):
+    '''params : super_expression addArgument call_mult_params
+                | empty'''
 
 # Rule to call multiple parameters in a function call
-def p_call_mult_exp(p):
-    '''call_mult_exp : "," super_expression call_mult_exp
+def p_call_mult_params(p):
+    '''call_mult_params : "," super_expression addArgument call_mult_params
                 | empty'''
 
 # Conditionals and cycles
@@ -463,28 +475,30 @@ def p_minusQuadruple(p):
     # TODO: addCte(-1) lookup constant in constant table
     # get symbol
     # check scope and generate temporary
-    #quadruple_list.push(Quadruple('*', -1, rightOperand, -1))
+    # quadruples.push(Quadruple('*', -1, rightOperand, -1))
     # push temporary to operand stack
     # push result type to type stack
 
-def p_addBottom(p):
-    'addBottom :'
+def p_addFakeBottom(p):
+    'addFakeBottom :'
     operatorStack.push('(')
 
-def p_delBottom(p):
-    'delBottom :'
+def p_delFakeBottom(p):
+    'delFakeBottom :'
     operatorStack.pop()
 
 def p_addAssignQuadruple(p):
     'addAssignQuadruple :'
     operator = operatorStack.pop()
+    # Operands
     rightOperand = operandStack.pop()
     leftOperand = operandStack.pop()
+    # Types
     rightType = typeStack.pop()
     leftType = typeStack.pop()
     resultType = getResultType(leftType, operator, rightType)
     if resultType is not None:
-        quadruple_list.push(Quadruple(operator, rightOperand, None, leftOperand))
+        quadruples.push(Quadruple(operator, rightOperand, None, leftOperand))
     else:
         print("Error: Result type mismatch")
         return
@@ -493,17 +507,17 @@ def p_addPrintQuadruple(p):
     'addPrintQuadruple :'
     output = operandStack.pop()
     typeStack.pop()
-    quadruple_list.push(Quadruple("PRINT", None, None, output))
+    quadruples.push(Quadruple("PRINT", None, None, output))
 
 def p_addNewLineQuadruple(p):
     'addNewLineQuadruple :'
-    quadruple_list.push(Quadruple("PRINTLN", None, None, None, None))
+    quadruples.push(Quadruple("PRINTLN", None, None, None, None))
 
 def p_addReadQuadruple(p):
     'addReadQuadruple :'
     inputValue = operandStack.pop()
     typeStack.pop()
-    quadruple_list.push(Quadruple("READ", None, None, inputValue))
+    quadruples.push(Quadruple("READ", None, None, inputValue))
 
 # =================================
 # Condition Logic #
@@ -516,24 +530,24 @@ def p_tryIfCondition(p):
         print("Error: Result type mismatch")
         return
     else:
-        quadruple_list.push(Quadruple("GOTOF", expResult, None, -1))
+        quadruples.push(Quadruple("GOTOF", expResult, None, -1))
         Quadruple()
-        jumpStack.push(quadruple_list.size() - 1)
+        jumpStack.push(quadruples.size() - 1)
 
 def p_endIfCondition(p):
     'endIfCondition :'
-    assignJump(quadruple_list.size())
+    assignJump(quadruples.size())
 
 def p_tryElseCondition(p):
     'tryElseCondition :'
-    quadruple_list.push(Quadruple("GOTO", None, None, -1))
+    quadruples.push(Quadruple("GOTO", None, None, -1))
     goToFIndex = jumpStack.pop()
-    jumpStack.push(quadruple_list.size() - 1)
+    jumpStack.push(quadruples.size() - 1)
     assignJump(goToFIndex)
 
 def p_whileCondition(p):
     'whileCondition :'
-    jumpStack.push(quadruple_list.size())
+    jumpStack.push(quadruples.size())
 
 def p_tryWhileCondition(p):
     'tryWhileCondition : tryIfCondition'
@@ -542,14 +556,14 @@ def p_endWhileCondition(p):
     'endWhileCondition :'
     goToFIndex = jumpStack.pop()
     cycleBack = jumpStack.pop()
-    quadruple_list.push(Quadruple("GOTO", None, None, cycleBack))
-    goToFQuad = quadruple_list[goToFIndex]
-    goToFQuad.result = quadruple_list.size()
+    quadruples.push(Quadruple("GOTO", None, None, cycleBack))
+    goToFQuad = quadruples[goToFIndex]
+    goToFQuad.result = quadruples.size()
 
 def assignJump(position):
-    global jumpStack, quadruple_list
+    global jumpStack, quadruples
     jump = jumpStack.pop()
-    goToFQuad = quadruple_list[jump]
+    goToFQuad = quadruples[jump]
     goToFQuad.result = position
 
 # =================================
@@ -565,6 +579,93 @@ def p_saveFunctionType(p):
     'saveFunctionType :'
     global tFuncType
     tFuncType = p[-1]
+
+def p_addParameter(p):
+    'addParameter :'
+    varName = p[-1]
+    varType = p[-2]
+    createVariable(varName, varType)
+    tFuncParameters.append(varType)
+
+def p_addFunction(p):
+    'addFunction :'
+    global tFuncName, tFuncType, tFuncParameters
+    createFunction(tFuncName, tFuncType, tFuncParameters, quadruples.size())
+
+def p_endFunction(p):
+    'endFunction :'
+    global tFuncParameters
+    tFuncParameters = []
+    # TODO: set memory limits
+    varsLocal.clear()
+    quadruple = Quadruple('ENDFUNC', None, None, None)
+    quadruples.push(quadruple)
+
+def createFunction(funcName, funcType, params, position):
+    global dirFuncs
+    function = Function(funcName, funcType, params, position)
+    # Insert function validates duplicate function declarations
+    # TODO: function is already declared try and catch
+    dirFuncs.insert(function)
+
+def p_lookupFunc(p):
+    'lookupFunc :'
+    global dirFuncs, tFuncCallName, tFuncCallType
+    funcId = p[-1]
+    function = dirFuncs.find(funcId)
+    if function is None:
+        raise Exception("Function error: function not found")
+    else:
+        tFuncCallName.push(function.name)
+        tFuncCallType.push(function.type)
+
+def p_generateEra(p):
+    'generateEra :'
+    global tFuncCallArgs
+    quadruple = Quadruple('ERA', tFuncCallName.top(), None, None)
+    quadruples.push(quadruple)
+    tFuncCallArgs.push(0)
+
+def p_addArgument(p):
+    'addArgument :'
+    global operandStack, typeStack, dirFuncs, tFuncCallName, tFuncCallArgs
+    argument = operandStack.pop()
+    argumentType = typeStack.pop()
+    function = dirFuncs.find(tFuncCallName.top())
+    param = function.parameters[tFuncCallArgs.top()]
+    if argumentType == param:
+        args = tFuncCallArgs.pop()
+        quadruple = Quadruple('PARAM', argument, None, args)
+        quadruples.push(quadruple)
+        tFuncCallArgs.push(args + 1)
+    else:
+        raise Exception("Function error: parameter type mismatch")
+
+def p_verifyArguments(p):
+    'verifyArguments :'
+    function = dirFuncs.find(tFuncCallName.top())
+    if len(function.parameters) != tFuncCallArgs:
+        raise Exception("Function error: incorrect number of arguments")
+
+def p_generateGoSub(p):
+    'generateGoSub :'
+    function = dirFuncs.find(tFuncCallName.top())
+    if function is not None:
+        if tFuncCallType.top() != Type.VOID and function.type != None:
+            # TODO: Generate temporary variable (check scope)
+            # TODO: Quadruple must have memory address
+            quadruple = Quadruple('GOSUB', function.name, None, None)
+            quadruples.push(quadruple)
+        else:
+            quadruple = Quadruple('GOSUB', function.name, None, None)
+            quadruples.push(quadruple)
+    else:
+        raise Exception("Function error: function not found")
+    tFuncCallType.pop()
+    tFuncCallName.pop()
+    tFuncCallArgs.pop()
+
+
 
 # =================================
 # Build lex and yacc #

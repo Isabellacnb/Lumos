@@ -17,8 +17,8 @@ class FunctionDirectory:
         self.functions = {}
 
     def find(self, function):
-        if function.name in self.function:
-            return self.variables[function.name]
+        if function.name in self.functions:
+            return self.functions[function.name]
         else:
             return None
 
@@ -26,10 +26,10 @@ class FunctionDirectory:
         if self.find(function) is not None:
             print("Invalid function: '", function.name, " is already declared.")
         else:
-            self.variables[function.name] = function
-            return self.variables[function.name]
+            self.functions[function.name] = function
+            return self.functions[function.name]
         return 0;
     
     def clear(self):
-        self.function.clear()
+        self.functions.clear()
         

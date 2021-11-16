@@ -34,6 +34,7 @@ tFuncCallArgs = Stack()
 # Variable Tables
 varsGlobal = VariableTable()
 varsLocal = VariableTable()
+constantTable = VariableTable()
 
 # Function Tables
 dirFuncs = FunctionDirectory()
@@ -49,7 +50,7 @@ scope = Scope.GLOBAL
 
 # Rule to define program structure
 def p_programa(p):
-	'''program : LUMOS ID ";" prog_vars prog_func setScopeLocal main setScopeGlobal NOX ";"'''
+	'''program : LUMOS ID goToMain ";" prog_vars prog_func setScopeLocal setGoToMain main setScopeGlobal NOX setEnd ";"'''
 
 # Rule to define program types
 def p_type(p):
@@ -222,8 +223,7 @@ def p_cte_char(p):
 
 # TODO: related to arrays
 def p_id_dim(p):
-    '''id_dim : array_dim
-                | empty'''
+    '''id_dim : array_dim'''
 
 def p_cte_int(p):
     "cte : CTE_INT"
@@ -236,6 +236,7 @@ def p_cte_bool(p):
         p[0] = True
     elif p[1] == 'false':
         p[0] = False
+
 
 # Functions
 # =============================
@@ -365,14 +366,32 @@ def p_storeVar(p):
 
 def createVariable(name, type):
     global varsGlobal, varsLocal
-    var = Variable(name, type);
+    var = Variable(name, type)
     if scope == Scope.GLOBAL:
         varsGlobal.insert(var)
         # TODO: Address addition
     elif scope == Scope.LOCAL:
         varsLocal.insert(var)
         # TODO: Address addition
-    print(name)
+
+def createConstant(constValue):
+    global constantTable
+    if not constantTable.find(constValue):
+        if type(constValue) == int:
+            constType = Type.INT
+        elif type(constValue) == float:
+            constType = Type.FLOAT
+        elif type(constValue) == str and len(constValue) == 1:
+            constType = Type.CHAR
+        elif type(constValue) == str:
+            constType = Type.STRING
+        const = Constant(-1, constValue, constType, constValue)
+        constantTable.insert(const)
+
+
+
+
+
 
 # =================================
 # Arithmetic Quadruple Generation #
@@ -397,18 +416,21 @@ def p_addCte(p):
     'addCte : '
     cte = p[-1]
     # TODO: addConstant(cte) #add constant and generate new address
+    createConstant(cte)
+
 
 # TODO: pushConstantOperand --> needs a constant table to push constant adress to operandStack
 def p_addOperandCte(p):
     'addOperandCte :'
-    constantName = str(p[-2])
-    constantType = -1
-    # constant lookup in constant table with name
-    operandStack.push(constantName)
-    typeStack.push(constantType)
+    global operandStack, typeStack
+    constantName = p[-2]
+    cte = constantTable.find(constantName)
+    operandStack.push(cte.name)
+    typeStack.push(cte.type)
 
 def p_addOperator(p):
     'addOperator :'
+    global operatorStack
     operatorStack.push(p[-1])
 
 def p_lookupID(p):
@@ -425,10 +447,12 @@ def p_lookupID(p):
         print("Error: Variable not found!")
         return
     else:
+        tVarName.push(var.name)
+        tVarType.push(var.type)
         print("Found: " + str(var))
 
 def generateQuadrupleExpression(operators):
-    global operandStack, operatorStack, typeStack
+    global operandStack, operatorStack, typeStack, quadruples
     operator = operatorStack.top()
     if operator in operators:
         operator = operatorStack.pop()
@@ -446,16 +470,15 @@ def generateQuadrupleExpression(operators):
         typeStack.push(resultType)
         # TODO: push temporary variable to operand stack (address)
         operandStack.push(-1)
-        print(str(quadruple) + " " + resultType)
+        print(str(quadruple) + " " + str(resultType))
 
 def p_logicalQuadruple(p):
     'logicalQuadruple :'
     generateQuadrupleExpression(['and', 'or'])
 
-# TODO: should != be NE
 def p_relationalQuadruple(p):
     'relationalQuadruple :'
-    generateQuadrupleExpression(['<', '>', '==', '!=', '<=', '>='])
+    generateQuadrupleExpression(['<', '>', '==', '<>', '<=', '>='])
 
 def p_addsubQuadruple(p):
     'addsubQuadruple :'
@@ -467,6 +490,7 @@ def p_multdivQuadruple(p):
 
 def p_minusQuadruple(p):
     'minusQuadruple :'
+    global operandStack, typeStack
     rightOperand = operandStack.pop()
     type = typeStack.pop()
     if type is Type.STRING or type is Type.CHAR or type is Type.BOOL:
@@ -481,14 +505,17 @@ def p_minusQuadruple(p):
 
 def p_addFakeBottom(p):
     'addFakeBottom :'
+    global operatorStack
     operatorStack.push('(')
 
 def p_delFakeBottom(p):
     'delFakeBottom :'
+    global operatorStack
     operatorStack.pop()
 
 def p_addAssignQuadruple(p):
     'addAssignQuadruple :'
+    global operatorStack, operandStack, typeStack, quadruples
     operator = operatorStack.pop()
     # Operands
     rightOperand = operandStack.pop()
@@ -505,16 +532,19 @@ def p_addAssignQuadruple(p):
 
 def p_addPrintQuadruple(p):
     'addPrintQuadruple :'
+    global operandStack, typeStack, quadruples
     output = operandStack.pop()
     typeStack.pop()
     quadruples.push(Quadruple("PRINT", None, None, output))
 
 def p_addNewLineQuadruple(p):
     'addNewLineQuadruple :'
+    global quadruples
     quadruples.push(Quadruple("PRINTLN", None, None, None, None))
 
 def p_addReadQuadruple(p):
     'addReadQuadruple :'
+    global operandStack, typeStack, quadruples
     inputValue = operandStack.pop()
     typeStack.pop()
     quadruples.push(Quadruple("READ", None, None, inputValue))
@@ -524,14 +554,14 @@ def p_addReadQuadruple(p):
 # =================================
 def p_tryIfCondition(p):
     'tryIfCondition :'
-    expResult = operandStack.pop()
+    global operandStack, typeStack, quadruples, jumpStack
+    expResult = operandStack.pop() 
     expType = typeStack.pop()
     if expType != Type.BOOL:
         print("Error: Result type mismatch")
         return
     else:
         quadruples.push(Quadruple("GOTOF", expResult, None, -1))
-        Quadruple()
         jumpStack.push(quadruples.size() - 1)
 
 def p_endIfCondition(p):
@@ -540,13 +570,17 @@ def p_endIfCondition(p):
 
 def p_tryElseCondition(p):
     'tryElseCondition :'
+    global quadruples, jumpStack
     quadruples.push(Quadruple("GOTO", None, None, -1))
     goToFIndex = jumpStack.pop()
+    print(jumpStack)
     jumpStack.push(quadruples.size() - 1)
-    assignJump(goToFIndex)
+    goToFQuad = quadruples.at(goToFIndex)
+    goToFQuad.result = quadruples.size()
 
 def p_whileCondition(p):
     'whileCondition :'
+    global jumpStack
     jumpStack.push(quadruples.size())
 
 def p_tryWhileCondition(p):
@@ -554,26 +588,43 @@ def p_tryWhileCondition(p):
 
 def p_endWhileCondition(p):
     'endWhileCondition :'
+    global quadruples, jumpStack
     goToFIndex = jumpStack.pop()
     cycleBack = jumpStack.pop()
     quadruples.push(Quadruple("GOTO", None, None, cycleBack))
-    goToFQuad = quadruples[goToFIndex]
+    goToFQuad = quadruples.at(goToFIndex)
     goToFQuad.result = quadruples.size()
 
 def assignJump(position):
     global jumpStack, quadruples
     jump = jumpStack.pop()
-    goToFQuad = quadruples[jump]
-    goToFQuad.result = position
+    print(jumpStack)
+    goToQuad = quadruples.at(jump)
+    goToQuad.result = position
 
 # =================================
 # Function logic #
 # =================================
+def p_goToMain(p):
+    'goToMain :'
+    quad = Quadruple("GOTO", None, None, -1)
+    quadruples.push(quad)
+    jumpStack.push(quadruples.size() - 1)
+
+def p_setGoToMain(p):
+    'setGoToMain :'
+    assignJump(quadruples.size())
+
+def p_setEnd(p):
+    'setEnd :'
+    quad = Quadruple("END", None, None, None)
+    quadruples.push(quad)
 
 def p_saveFunctionName(p):
     'saveFunctionName :'
     global tFuncName
     tFuncName = p[-1]
+    print("New function - ", tFuncName)
 
 def p_saveFunctionType(p):
     'saveFunctionType :'
@@ -603,7 +654,7 @@ def p_endFunction(p):
 
 def createFunction(funcName, funcType, params, position):
     global dirFuncs
-    function = Function(funcName, funcType, params, position)
+    function = Function(funcName, funcType, params, position, None) #TODO added none to avoid error
     # Insert function validates duplicate function declarations
     # TODO: function is already declared try and catch
     dirFuncs.insert(function)
@@ -644,8 +695,8 @@ def p_addArgument(p):
 def p_verifyArguments(p):
     'verifyArguments :'
     function = dirFuncs.find(tFuncCallName.top())
-    if len(function.parameters) != tFuncCallArgs:
-        raise Exception("Function error: incorrect number of arguments")
+    if len(function.parameters) != tFuncCallArgs.top():
+        raise Exception("Function error: incorrect number of arguments, found", tFuncCallArgs.top(), "should be", len(function.parameters))
 
 def p_generateGoSub(p):
     'generateGoSub :'
@@ -681,7 +732,7 @@ yacc.yacc()
 if __name__ == '__main__':
 
     try:
-        f = open("../samples/demofile.nox", "r")
+        f = open("../samples/demofilesimple.nox", "r")
         file = f.read()
         f.close()
     except EOFError:
@@ -690,6 +741,7 @@ if __name__ == '__main__':
     #Parse the file using grammar
     yacc.parse(file)
     print("Sucessfully parsed...")
+    print(str(quadruples))
     # print("GLOBAL")
     # print(str(varsGlobal))
     # print("LOCAL")

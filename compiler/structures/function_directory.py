@@ -17,8 +17,8 @@ class FunctionDirectory:
         self.functions = {}
 
     def find(self, function):
-        if function.name in self.functions:
-            return self.functions[function.name]
+        if function in self.functions:
+            return self.functions[function]
         else:
             return None
 
@@ -28,7 +28,7 @@ class FunctionDirectory:
         else:
             self.functions[function.name] = function
             return self.functions[function.name]
-        return 0;
+        return 0
     
     def clear(self):
         self.functions.clear()

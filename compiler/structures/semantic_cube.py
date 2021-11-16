@@ -91,17 +91,17 @@ cube['CHAR==STRING'] = Type.BOOL
 cube['STRING==STRING'] = Type.BOOL
 
 # Unequal
-cube['BOOL!=BOOL'] = Type.BOOL
-cube['INT!=INT'] = Type.BOOL
-cube['INT!=CHAR'] = Type.BOOL
-cube['INT!=FLOAT'] = Type.BOOL
-cube['FLOAT!=FLOAT'] = Type.BOOL
-cube['FLOAT!=INT'] = Type.BOOL
-cube['CHAR!=INT'] = Type.BOOL
-cube['CHAR!=CHAR'] = Type.BOOL
-cube['STRING!=CHAR'] = Type.BOOL
-cube['CHAR!=STRING'] = Type.BOOL
-cube['STRING!=STRING'] = Type.BOOL
+cube['BOOL<>BOOL'] = Type.BOOL
+cube['INT<>INT'] = Type.BOOL
+cube['INT<>CHAR'] = Type.BOOL
+cube['INT<>FLOAT'] = Type.BOOL
+cube['FLOAT<>FLOAT'] = Type.BOOL
+cube['FLOAT<>INT'] = Type.BOOL
+cube['CHAR<>INT'] = Type.BOOL
+cube['CHAR<>CHAR'] = Type.BOOL
+cube['STRING<>CHAR'] = Type.BOOL
+cube['CHAR<>STRING'] = Type.BOOL
+cube['STRING<>STRING'] = Type.BOOL
 
 # Less than
 cube['INT<INT'] = Type.BOOL

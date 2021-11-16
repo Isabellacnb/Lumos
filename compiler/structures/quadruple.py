@@ -6,4 +6,4 @@ class Quadruple():
         self.result = result
     
     def __str__(self):
-        return "(" + self.operator + ", " + self.operLeft + ", " + self.operRight + ", " + self.result + ")"
+        return "(" + str(self.operator) + ", " + str(self.operLeft) + ", " + str(self.operRight) + ", " + str(self.result) + ")"

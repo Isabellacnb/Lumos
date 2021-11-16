@@ -1,0 +1,30 @@
+lumos DemoProgram;
+vars
+int i , j;
+bool check;
+
+task outputBigger(int a , int b) : void {
+    if(a > b) {
+        print(a);
+    } else {
+        print(b);
+    }
+}
+
+main {
+    vars
+    int x, i;
+    string text;
+
+    x = 10;
+    i = (2 + x) * 1 / 1;
+
+    while(i <> 0) {
+        print(i);
+        i = i - 1;
+    }
+
+    outputBigger(x, i);
+}
+
+nox;

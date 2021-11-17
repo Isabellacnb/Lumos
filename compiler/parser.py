@@ -5,6 +5,7 @@
 # ----------------------------------------
 
 
+from compiler.memory import AddressManager
 import scanner
 # Import lex and yacc
 import ply.lex as lex
@@ -24,8 +25,8 @@ jumpStack = Stack()
 tVarName = Stack()
 tVarType = Stack()
 # Temporary Function data
-tFuncName = Stack()
-tFuncType = Stack()
+tFuncName = ""
+tFuncType = ""
 tFuncParameters = []
 tFuncCallName = Stack()
 tFuncCallType = Stack()
@@ -42,7 +43,8 @@ dirFuncs = FunctionDirectory()
 # Scope
 scope = Scope.GLOBAL
 
-# TODO: Address system declaration
+# Memory
+addressManager = AddressManager()
 
 # =================================
 # Grammar Rules #
@@ -50,7 +52,7 @@ scope = Scope.GLOBAL
 
 # Rule to define program structure
 def p_programa(p):
-	'''program : LUMOS ID goToMain ";" prog_vars prog_func setScopeLocal setGoToMain main setScopeGlobal NOX setEnd ";"'''
+	'''program : LUMOS ID goToMain ";" prog_vars prog_func setScopeLocal setGoToMain main NOX setEnd ";"'''
 
 # Rule to define program types
 def p_type(p):
@@ -135,7 +137,7 @@ def p_stmt_endl(p):
 
 # Rule to return value in function
 def p_return(p):
-    '''return : RETURN super_expression'''
+    '''return : RETURN super_expression setReturn'''
 
 # TODO: CHECK
 # TODO: INPUT WITH INDEX SELECTOR
@@ -247,7 +249,7 @@ def p_prog_func(p):
 
 # Rule to call main function
 def p_main(p):
-    '''main : MAIN section'''
+    '''main : MAIN setScopeLocal section setScopeGlobal'''
 
 # Rule to write a function
 # TODO: falta addfunction despues de saveFunctionType
@@ -265,10 +267,12 @@ def p_mul_sec(p):
 
 # Rule to define type of function
 def p_type_func(p):
-    '''type_func : type
+    '''type_func : type 
                 | VOID'''
     if(p[1] == 'void'):
         p[0] = Type.VOID
+    else:
+        p[0] = p[1]
 
 # TODO: check for functions without parameters
 # Rule to define function parameter
@@ -366,13 +370,14 @@ def p_storeVar(p):
 
 def createVariable(name, type):
     global varsGlobal, varsLocal
+    # TODO: VERIFY Address addition
     var = Variable(name, type)
     if scope == Scope.GLOBAL:
+        var.address = addressManager.nextAddress(Scope.GLOBAL, type)
         varsGlobal.insert(var)
-        # TODO: Address addition
     elif scope == Scope.LOCAL:
+        var.address = addressManager.nextAddress(Scope.LOCAL, type)
         varsLocal.insert(var)
-        # TODO: Address addition
 
 def createConstant(constValue):
     global constantTable
@@ -385,11 +390,9 @@ def createConstant(constValue):
             constType = Type.CHAR
         elif type(constValue) == str:
             constType = Type.STRING
-        const = Constant(-1, constValue, constType, constValue)
+        address = addressManager.nextAddress(Scope.CONSTANT, constType)
+        const = Constant(address, constValue, constType, constValue)
         constantTable.insert(const)
-
-
-
 
 
 
@@ -415,7 +418,6 @@ def p_addOperandId(p):
 def p_addCte(p):
     'addCte : '
     cte = p[-1]
-    # TODO: addConstant(cte) #add constant and generate new address
     createConstant(cte)
 
 
@@ -677,6 +679,17 @@ def p_generateEra(p):
     quadruples.push(quadruple)
     tFuncCallArgs.push(0)
 
+def p_setReturn(p):
+    'setReturn :'
+    global operandStack, typeStack, quadruples, tFuncName
+    output = operandStack.pop()
+    outputType  = typeStack.pop()
+    func = dirFuncs.find(tFuncName)
+    if outputType != func.type:
+        raise Exception("RETURN TYPE EXPECTED", func.type, "INSTEAD GOT", outputType)
+        
+    quadruples.push(Quadruple("RETURN", None, None, output))
+
 def p_addArgument(p):
     'addArgument :'
     global operandStack, typeStack, dirFuncs, tFuncCallName, tFuncCallArgs
@@ -742,6 +755,7 @@ if __name__ == '__main__':
     yacc.parse(file)
     print("Sucessfully parsed...")
     print(str(quadruples))
+    print(str(dirFuncs))
     # print("GLOBAL")
     # print(str(varsGlobal))
     # print("LOCAL")

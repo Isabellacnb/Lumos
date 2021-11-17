@@ -11,6 +11,9 @@ class Function:
         self.parameters = parameters
         self.quadruplePosition = quadruplePosition
         self.limits = memoryLimits
+    
+    def __str__(self):
+        return "Function: " + str(self.name) + " (" + str(self.type) + ") - " + str(self.parameters) + " - " + str(self.quadruplePosition) + "(quad position)"
 
 class FunctionDirectory:
     def __init__(self):
@@ -32,4 +35,12 @@ class FunctionDirectory:
     
     def clear(self):
         self.functions.clear()
+
+    def __str__(self):
+        output = ""
+        
+        for function in self.functions.values():
+            output += str(function) + "\n"
+
+        return output
         

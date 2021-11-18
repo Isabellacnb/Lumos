@@ -4,6 +4,11 @@ int i , j;
 bool check;
 
 task outputBigger(int a , int b) : void {
+    vars
+    int x;
+    
+    x = x + 1;
+
     if(a > b) {
         print(a);
     } else {
@@ -11,16 +16,31 @@ task outputBigger(int a , int b) : void {
     }
 }
 
+task outputSmaller(float a, float b) : float {
+    if(a < b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 main {
     vars
     int x, i;
     string text;
+    float y;
 
     x = 10;
     i = (2 + x) * 1 / 1;
 
     while(i <> 0) {
         print(i);
+        
+        if(i == 1) {
+            print("Last iteration");
+            x = outputSmaller(y, y);
+        }
+
         i = i - 1;
     }
 

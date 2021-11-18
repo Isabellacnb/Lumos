@@ -14,6 +14,19 @@ class Variable:
     def __str__(self) -> str:
         return "[" + self.name + " " + str(self.type) + " " + str(self.address) + "]"
 
+class Constant:
+    def __init__(self, address, name, type, value):
+        self.address = address
+        self.name = name
+        self.type = type
+        self.value = value
+    
+    def address(self):
+        return self.address
+    
+    def __str__(self) -> str:
+        return 'Constant: ' + self.name + ', ' + self.type + ', ' + str(self.address())
+
 class VariableTable:
     def __init__(self):
         self.variables = {}
@@ -41,19 +54,6 @@ class VariableTable:
             string += str(var) + "\n"
         
         return string + "}"
-
-class Constant:
-    def __init__(self, address, name, type, value):
-        self.address = address
-        self.name = name
-        self.type = type
-        self.value = value
-    
-    def address(self):
-        return self.address
-    
-    def __str__(self) -> str:
-        return 'Constant: ' + self.name + ', ' + self.type + ', ' + str(self.address())
 
 
         

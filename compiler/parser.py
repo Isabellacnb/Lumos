@@ -5,7 +5,7 @@
 # ----------------------------------------
 
 
-from compiler.memory import AddressManager
+from memory import AddressManager
 import scanner
 # Import lex and yacc
 import ply.lex as lex
@@ -370,7 +370,6 @@ def p_storeVar(p):
 
 def createVariable(name, type):
     global varsGlobal, varsLocal
-    # TODO: VERIFY Address addition
     var = Variable(name, type)
     if scope == Scope.GLOBAL:
         var.address = addressManager.nextAddress(Scope.GLOBAL, type)
@@ -412,7 +411,7 @@ def p_addOperandId(p):
             var = varsGlobal.find(tVarName.top())
         if var is None:
             print(tVarName.top(), "is not a local or global variable!")
-    operandStack.push(tVarName.top())
+    operandStack.push(var.address)
     typeStack.push(tVarType.top())
 
 def p_addCte(p):
@@ -427,7 +426,7 @@ def p_addOperandCte(p):
     global operandStack, typeStack
     constantName = p[-2]
     cte = constantTable.find(constantName)
-    operandStack.push(cte.name)
+    operandStack.push(cte.address)
     typeStack.push(cte.type)
 
 def p_addOperator(p):
@@ -465,13 +464,15 @@ def generateQuadrupleExpression(operators):
         typeRight = typeStack.pop()
         typeLeft = typeStack.pop()
         resultType = getResultType(typeLeft, operator, typeRight)
-        # TODO: Check if global or local temporary variable
-        quadruple = Quadruple(operator, operLeft, operRight, -1)
-        quadruples.push(quadruple)
-        # Push temporary
+
+        # Generate temporary address and push to operand stack
+        tmpAddress = addressManager.nextAddress(Scope.TEMPORARY, resultType)
+        operandStack.push(tmpAddress)
         typeStack.push(resultType)
-        # TODO: push temporary variable to operand stack (address)
-        operandStack.push(-1)
+
+        # TODO: Check if global or local temporary variable (maybe not necessary since we don't distinguish global and local temporary variables)
+        quadruple = Quadruple(operator, operLeft, operRight, tmpAddress)
+        quadruples.push(quadruple)
         print(str(quadruple) + " " + str(resultType))
 
 def p_logicalQuadruple(p):
@@ -575,7 +576,6 @@ def p_tryElseCondition(p):
     global quadruples, jumpStack
     quadruples.push(Quadruple("GOTO", None, None, -1))
     goToFIndex = jumpStack.pop()
-    print(jumpStack)
     jumpStack.push(quadruples.size() - 1)
     goToFQuad = quadruples.at(goToFIndex)
     goToFQuad.result = quadruples.size()
@@ -651,6 +651,7 @@ def p_endFunction(p):
     tFuncParameters = []
     # TODO: set memory limits
     varsLocal.clear()
+    addressManager.resetAddresses()
     quadruple = Quadruple('ENDFUNC', None, None, None)
     quadruples.push(quadruple)
 
@@ -687,8 +688,9 @@ def p_setReturn(p):
     func = dirFuncs.find(tFuncName)
     if outputType != func.type:
         raise Exception("RETURN TYPE EXPECTED", func.type, "INSTEAD GOT", outputType)
-        
+
     quadruples.push(Quadruple("RETURN", None, None, output))
+    addressManager.resetAddresses()
 
 def p_addArgument(p):
     'addArgument :'
@@ -713,13 +715,21 @@ def p_verifyArguments(p):
 
 def p_generateGoSub(p):
     'generateGoSub :'
+    global varsGlobal, quadruples, operandStack, typeStack
     function = dirFuncs.find(tFuncCallName.top())
     if function is not None:
         if tFuncCallType.top() != Type.VOID and function.type != None:
             # TODO: Generate temporary variable (check scope)
             # TODO: Quadruple must have memory address
-            quadruple = Quadruple('GOSUB', function.name, None, None)
+            var = Variable(function.name, function.type)
+            var.address = addressManager.nextAddress(Scope.GLOBAL, tFuncType)
+            varsGlobal.insert(var)
+            print("ASDFASDFASDF", varsGlobal)
+            
+            quadruple = Quadruple('GOSUB', function.name, None, var.address)
             quadruples.push(quadruple)
+            operandStack.push(var.address)
+            typeStack.push(function.type)
         else:
             quadruple = Quadruple('GOSUB', function.name, None, None)
             quadruples.push(quadruple)

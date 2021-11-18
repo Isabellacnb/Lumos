@@ -19,26 +19,30 @@ class AddressManager:
             self.localAddresses[type] = self.space * 1 + idx * self.typeRange
             self.tempAddresses[type] = self.space * 2 + idx * self.typeRange
             self.cteAddresses[type] = self.space * 3 + idx * self.typeRange
-            #print("GLOBAL", type, "START", self.globalAddresses[type])
-            #print("LOCAL", type, "START", self.localAddresses[type])
-            #print("TEMP", type, "START", self.tempAddresses[type])
-            #print("CTE", type, "START", self.cteAddresses[type])
+            print("GLOBAL", type, "START", self.globalAddresses[type])
+            print("LOCAL", type, "START", self.localAddresses[type])
+            print("TEMP", type, "START", self.tempAddresses[type])
+            print("CTE", type, "START", self.cteAddresses[type])
 
     def nextAddress(self, scope, type, size=1):
-        if (scope == Scope.GLOBAL):
-            address = self.globalAddresses[type]
-            self.globalAddresses[type] += size
-        elif (scope == Scope.LOCAL):
-            address = self.localAddresses[type]
-            self.localAddresses[type] += size
-        elif (scope == Scope.TEMPORARY):
-            address = self.tempAddresses[type]
-            self.tempAddresses[type] += size
-        elif (scope == Scope.CONSTANT):
-            address = self.cteAddresses[type]
-            self.cteAddresses[type] += size
-        
-        return address
+        #TODO: Check next address is not out of bounds
+        try:
+            if (scope == Scope.GLOBAL):
+                address = self.globalAddresses[type]
+                self.globalAddresses[type] += size
+            elif (scope == Scope.LOCAL):
+                address = self.localAddresses[type]
+                self.localAddresses[type] += size
+            elif (scope == Scope.TEMPORARY):
+                address = self.tempAddresses[type]
+                self.tempAddresses[type] += size
+            elif (scope == Scope.CONSTANT):
+                address = self.cteAddresses[type]
+                self.cteAddresses[type] += size
+            
+            return address
+        except Exception as e:
+            raise("ERROR: When trying to generate a new address the following problem was found:", e)
     
     def resetAddresses(self):
         for idx, type in enumerate(Type):

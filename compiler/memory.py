@@ -62,13 +62,34 @@ class AddressManager:
 
         return (local, temp)
         
+'''
+ADDRESS SYSTEM MAP:
+<GLOBAL>: 
+    bool: 0
+     int: 4000
+   float: 8000
+    char: 12000
+  string: 16000
 
-# ad = AddressManager()
-# print(ad.nextAddress(Scope.GLOBAL, Type.INT))
-# print(ad.nextAddress(Scope.GLOBAL, Type.INT))
-# print(ad.nextAddress(Scope.LOCAL, Type.INT))
-# print(ad.nextAddress(Scope.LOCAL, Type.INT))
+<LOCAL>:
+    bool: 20000
+     int: 24000
+   float: 28000
+    char: 32000
+  string: 36000
 
-# ad.resetAddresses()
-# print(ad.nextAddress(Scope.LOCAL, Type.INT))
-# print(ad.nextAddress(Scope.LOCAL, Type.INT))
+<TEMPORARY>:
+    bool: 40000
+     int: 44000
+   float: 48000
+    char: 52000
+  string: 56000
+
+<CONSTANT>:
+    bool: 60000
+     int: 64000
+   float: 68000
+    char: 72000
+  string: 76000
+
+'''

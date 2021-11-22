@@ -52,14 +52,8 @@ class AddressManager:
             self.tempAddresses[type] = self.space * 2 + idx * self.typeRange
     
     def getLimits(self):
-        for idx, type in enumerate(Type):
-            if type == Type.VOID:
-                break
-            local = self.space * 1 + idx * self.typeRange
-            temp = self.space * 2 + idx * self.typeRange
-            local = self.localAddresses[type] - local
-            temp = self.tempAddresses[type] - temp
-
+        local = self.localAddresses
+        temp = self.tempAddresses
         return (local, temp)
         
 '''

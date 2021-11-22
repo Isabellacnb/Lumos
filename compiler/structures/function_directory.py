@@ -13,7 +13,7 @@ class Function:
         self.limits = memoryLimits
     
     def __str__(self):
-        return "Function: " + str(self.name) + " (" + str(self.type) + ") - " + str(self.parameters) + " - " + str(self.quadruplePosition) + "(quad position)"
+        return "Function: " + str(self.name) + " (" + str(self.type) + ") - " + str(self.parameters) + " - " + str(self.quadruplePosition) + "(quad position)" + str(self.limits)
 
 class FunctionDirectory:
     def __init__(self):

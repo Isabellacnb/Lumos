@@ -46,13 +46,15 @@ scope = Scope.GLOBAL
 # Memory
 addressManager = AddressManager()
 
+programName = None
+
 # =================================
 # Grammar Rules #
 # =================================
 
 # Rule to define program structure
 def p_programa(p):
-	'''program : LUMOS ID goToMain ";" prog_vars prog_func setScopeLocal setGoToMain main NOX setEnd ";"'''
+	'''program : LUMOS ID saveProgramID goToMain ";" prog_vars prog_func setScopeLocal setGoToMain main NOX setEnd ";"'''
 
 # Rule to define program types
 def p_type(p):
@@ -647,11 +649,18 @@ def p_addFunction(p):
 
 def p_endFunction(p):
     'endFunction :'
-    global tFuncParameters
-    tFuncParameters = []
+    global tFuncParameters, tFuncName
+    
     # TODO: set memory limits
+    memoryLimits = addressManager.getLimits()
+    currFunc = dirFuncs.find(tFuncName)
+    currFunc.limits = memoryLimits
+    print(tFuncName, dirFuncs.find(tFuncName).limits)
+
     varsLocal.clear()
     addressManager.resetAddresses()
+    tFuncParameters = []
+
     quadruple = Quadruple('ENDFUNC', None, None, None)
     quadruples.push(quadruple)
 
@@ -739,7 +748,13 @@ def p_generateGoSub(p):
     tFuncCallName.pop()
     tFuncCallArgs.pop()
 
-
+# =================================
+# Extra Functions
+# =================================
+def p_saveProgramID(p):
+    '''saveProgramID :'''
+    global programName
+    programName = str(p[-1]).lower()
 
 # =================================
 # Build lex and yacc #
@@ -752,9 +767,60 @@ tokens = scanner.tokens
 # Build the parser
 yacc.yacc()
 
+# =================================
+# Build Object Code file for virtual machine to run
+# =================================
+def generateObjectFile():
+    global programName, dirFuncs, constantTable, quadruples
+    with open(programName + ".lumos", "w+") as file:
+        # Functions
+        file.write("@FUNCTIONS\n")
+        for func in dirFuncs.functions.values():
+            file.write(serializeFunction(func))
+            file.write("\n")
+        # Constants
+        file.write("@CONSTANTS\n")
+        for const in constantTable.variables.values():
+            file.write(serializeConstant(const))
+            file.write("\n")
+        # Quads List
+        file.write("@QUADS\n")
+        for idx, quad in enumerate(quadruples.quads):
+            file.write(serializeQuad(idx, quad))
+            file.write("\n")
+
+def serializeFunction(func:Function):
+    # name|returnType|paramTypeArray|quadPosition|localLimitsArray|tempLimitsArray
+    output = str(func.name) + "|"
+    output += str(func.type.value) + "|"
+    output += str(list(map(lambda x: x.value, func.parameters))) + "|"
+    output += str(func.quadruplePosition) + "|"
+    output += str(list(func.limits[0].values())) + "|"
+    output += str(list(func.limits[1].values()))
+    return output
+
+def serializeConstant(const:Constant):
+    #TODO: Confirm if constant need value
+    # name|type|value|address
+    output = str(const.name) + "|"
+    output += str(const.type.value) + "|"
+    output += str(const.value) + "|"
+    output += str(const.address)
+    return output
+
+def serializeQuad(ind:int, quad:Quadruple):
+    # operation | 2nd ele | 3rd ele | result
+    output = str(ind) + "|"
+    output += str(quad.operator) + "|"
+    output += str(quad.operLeft) + "|"
+    output += str(quad.operRight) + "|"
+    output += str(quad.result)
+    return output
+
 if __name__ == '__main__':
 
     try:
+        # TODO: remove hard coded file
         f = open("../samples/demofilesimple.nox", "r")
         file = f.read()
         f.close()
@@ -766,6 +832,7 @@ if __name__ == '__main__':
     print("Sucessfully parsed...")
     print(str(quadruples))
     print(str(dirFuncs))
+    generateObjectFile()
     # print("GLOBAL")
     # print(str(varsGlobal))
     # print("LOCAL")

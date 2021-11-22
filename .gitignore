@@ -6,3 +6,6 @@ parsetab.py
 
 # General
 .DS_Store
+
+# Lumos
+*.lumos

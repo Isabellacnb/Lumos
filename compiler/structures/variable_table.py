@@ -25,7 +25,7 @@ class Constant:
         return self.address
     
     def __str__(self) -> str:
-        return 'Constant: ' + self.name + ', ' + self.type + ', ' + str(self.address())
+        return 'Constant: ' + str(self.name) + ', ' + str(self.type) + ', ' + str(self.address)
 
 class VariableTable:
     def __init__(self):

@@ -733,7 +733,6 @@ def p_generateGoSub(p):
             var = Variable(function.name, function.type)
             var.address = addressManager.nextAddress(Scope.GLOBAL, tFuncType)
             varsGlobal.insert(var)
-            print("ASDFASDFASDF", varsGlobal)
             
             quadruple = Quadruple('GOSUB', function.name, None, var.address)
             quadruples.push(quadruple)

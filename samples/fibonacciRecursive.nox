@@ -1,0 +1,32 @@
+lumos fibonacciRecursive;
+
+!! - Program to print fibonacci's nth term using Recursion
+
+task fibonacci(int x) : int {
+    if (x == 0) {
+        return 0;
+    }
+
+    if (x == 1) {
+        return 1;
+    }
+
+    return fibonacci(x - 1) + fibonacci(x - 2);
+}
+
+main {
+    vars
+    int number, fib;
+
+    !! - Input
+    print("Enter number: ");
+    read(number);
+
+    !! - Call function
+    fib = fibonacci(number);
+
+    !! - Print result
+    print("Fibonacci: ", fib);
+}
+
+nox;

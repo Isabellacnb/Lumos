@@ -1,0 +1,37 @@
+lumos factorial;
+
+!! - Program to find factorial
+
+main {
+    vars
+    int number, i;
+    float factorial;
+
+    !! - Initialize variables
+    i = 1;
+    factorial = 1.0;
+    
+    !! - Input
+    print("Enter positive number: ");
+    read(number);
+
+    !! - Check number is positive
+    if (n < 0) {
+
+        print("Can't calculate factorial of a negative number!");
+
+    } else {
+
+        !! - Loop through all numbers up to number value
+        while (i <= number) {
+            factorial = factorial * i;
+            i = i + 1;
+        }
+
+        !! - Print result
+        print("Factorial of ", number , " = ",  factorial);
+
+    }
+}
+
+nox;

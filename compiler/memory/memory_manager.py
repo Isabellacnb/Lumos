@@ -1,4 +1,5 @@
 from structures import *
+from .activation_record import ActivationRecord
 
 class MemoryManager:
     def __init__(self, g, l, t, c):
@@ -9,45 +10,55 @@ class MemoryManager:
         
         self.size = 20000
 
+        # Activation Record
+        self.callStack = Stack()
+        self.callStack.push(ActivationRecord((self.localAddresses, self.tempAddresses)))
+
         # Create arrays with the n number of addresses used
+        self.baseSize = self.size // (len(Type) - 1)
         self.globalMemory = {}
         for type in Type:
             if type == Type.VOID:
                 continue
-            self.globalMemory[type] = (self.globalAddresses[type] % self.size) * [None]
+            self.globalMemory[type] = (self.globalAddresses[type] % self.baseSize) * [None]
         
         self.cteMemory = {}
         for type in Type:
             if type == Type.VOID:
                 continue
-            self.cteMemory[type] = (self.cteAddresses[type] % self.size) * [None]
+            self.cteMemory[type] = (self.cteAddresses[type] % self.baseSize) * [None]
     
     def get(self, address):
         address = int(address) # safe check
 
         addressScope = self.getScopeOf(address)
-        addressType = self.getTypeOf(address)
-        address = address % self.size
+        addressType = self.getTypeOf(address, addressScope)
+        address = address % self.baseSize
 
         if addressScope == Scope.GLOBAL:
             return self.globalMemory[addressType][address]
         elif addressScope == Scope.CONSTANT:
             return self.cteMemory[addressType][address]
-        # Handled by Activation Record
+        # Handled by Activation Record as it's temp or local
         else:
-            pass
+            return self.callStack.top().get(addressScope, address, addressType)
 
     def set(self, address, value):
+        address = int(address) # safe check
+
         addressScope = self.getScopeOf(address)
-        addressType = self.getTypeOf(address)
-        address = address % self.size
+        addressType = self.getTypeOf(address, addressScope)
+        address = address % self.baseSize
 
         if addressScope == Scope.GLOBAL:
+            value = self.stringToType(value, addressType)
             self.globalMemory[addressType][address] = value
         elif addressScope == Scope.CONSTANT:
+            value = self.stringToType(value, addressType)
             self.cteMemory[addressType][address] = value
         else:
-            pass
+            value = self.stringToType(value, addressType)
+            self.callStack.top().set(addressScope, address, value, addressType)
 
     # ==================
     # Inner management functions
@@ -78,6 +89,17 @@ class MemoryManager:
             if type == Type.VOID:
                 continue
             elif baseOfTypes * idx <= address < baseOfTypes * (idx + 1):
-                return type        
+                return type  
+    
+    # Translate string to the specified type
+    def stringToType(self, value, type):
+        if type == Type.BOOL:
+            return True if type == "true" else False
+        elif type == Type.INT:
+            return int(value)
+        elif type == Type.FLOAT:
+            return float(value)
+        elif type == Type.CHAR or type == Type.STRING:
+            return value      
 
 

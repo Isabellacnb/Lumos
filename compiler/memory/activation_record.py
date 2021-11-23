@@ -9,37 +9,38 @@ class ActivationRecord:
 
         self.size = 20000
 
+        self.baseSize = self.size // (len(Type) - 1)
         self.localMemory = {}
         for type in Type:
             if type == Type.VOID:
                 continue
-            self.localAddresses[type] = (self.localAddresses[type] % self.size) * [None]
+            self.localMemory[type] = (self.localAddresses[type] % self.baseSize) * [None]
         
         self.temporaryMemory = {}
         for type in Type:
             if type == Type.VOID:
                 continue
-            self.temporaryMemory[type] = (self.temporaryMemory[type] % self.size) * [None]
+            self.temporaryMemory[type] = (self.temporaryAddresses[type] % self.baseSize) * [None]
 
     def set(self, scope, address, value, addressType):
         if (scope == Scope.TEMPORARY):
             for type in Type:
                 if addressType == type:
-                    self.temporaryMemory[type.value][address] = value
+                    self.temporaryMemory[type][address] = value
                     return
         elif (scope == Scope.LOCAL):
             for type in Type:
                 if addressType == type:
-                    self.localMemory[type.value][address] = value
+                    self.localMemory[type][address] = value
                     return
 
     def get(self, scope, address, addressType):
         if (scope == Scope.TEMPORARY):
             for type in Type:
                 if addressType == type:
-                    return self.temporaryMemory[type.value][address]
+                    return self.temporaryMemory[type][address]
         elif (scope == Scope.LOCAL):
             for type in Type:
                 if addressType == type:
-                    return self.localMemory[type.value][address]
+                    return self.localMemory[type][address]
     

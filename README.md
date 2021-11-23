@@ -13,3 +13,5 @@
 #### 09/11/2021 - Avance 5 (Generación de Código de Funciones)
 
 #### 15/11/2021 - Avance 6 (Generación de Código para Arreglos)
+
+#### 22/11/2021 - Avance 7 (Ejecución de Funciones y Arreglos)

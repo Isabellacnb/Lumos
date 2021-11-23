@@ -546,7 +546,7 @@ def p_addPrintQuadruple(p):
 def p_addNewLineQuadruple(p):
     'addNewLineQuadruple :'
     global quadruples
-    quadruples.push(Quadruple("PRINTLN", None, None, None, None))
+    quadruples.push(Quadruple("PRINTLN", None, None, None))
 
 def p_addReadQuadruple(p):
     'addReadQuadruple :'

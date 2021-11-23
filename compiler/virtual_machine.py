@@ -28,6 +28,9 @@ class VirtualMachine:
         self.load_file()
 
         self.memoryManager = MemoryManager(self.globalAddresses, self.localAddresses, self.tempAddresses, self.cteAddresses)
+        
+        for const in self.constantTable.variables.values():
+            self.memoryManager.set(const.address, const.value)
     
     def load_file(self):
         if not exists(self.file_path):
@@ -105,7 +108,7 @@ class VirtualMachine:
                 if phase == Phase.QUADS:
                     # operation | 2nd ele | 3rd ele | result
                     quadElements = line.split('|')
-                    quad = Quadruple(quadElements[0], quadElements[1], quadElements[2], quadElements[3])
+                    quad = Quadruple(quadElements[1], quadElements[2], quadElements[3], quadElements[4][:-1])
                     self.quad_list.push(quad)
         # except Exception as e:
         #     print("ERROR :: DURING OBJECT CODE LOADING AN ERROR OCCURED", e)
@@ -157,17 +160,26 @@ class VirtualMachine:
         inst_ptr = 0
 
         # Switch case to execute quadruple by quadruple 
-        for quad in self.quad_list.quads:
+        while (True):
+            quad = self.quad_list.at(inst_ptr)
             operation = quad.operator
 
             if operation == "GOTO":
                 logging.debug("GOTO exectued")
+                inst_ptr = int(quad.result)
+                continue
 
             elif operation == "GOTOF":
                 logging.debug("GOTOF executed")
+                condition = self.memoryManager.get(quad.operLeft)
+                if condition == False:
+                    inst_ptr = quad.result
+                    continue
 
             elif operation == "END":
                 logging.debug("END executed")
+                print("Mischief managed")
+                return
 
             elif operation == "ENDFUNC":
                 logging.debug("ENDFUNC executed")
@@ -177,38 +189,65 @@ class VirtualMachine:
 
             elif operation == "PRINT":
                 logging.debug("PRINT executed")
+                value = self.memoryManager.get(quad.result)
+                print(value, end="")
 
             elif operation == "PRINTLN":
                 logging.debug("PRINTLN executed")
+                print('\n')
 
             elif operation == "READ":
                 logging.debug("READ executed")
-            
+                input = input()
+                self.memoryManager.set(quad.result, input)
+
             elif operation == "=":
                 logging.debug("ASSIGN executed")
+                value = self.memoryManager.get(quad.operLeft)
+                self.memoryManager.set(quad.result, value)
 
             # Arithmetic operations
-            elif operation == "+":
-                logging.debug("SUM executed")
-            elif operation == "-":
-                logging.debug("SUB executed")
-            elif operation == "*":
-                logging.debug("MULT executed")
-            elif operation == "/":
-                logging.debug("DIV executed")
-            elif operation == ">":
-                logging.debug("MORETHAN executed")
-            elif operation == "<":
-                logging.debug("LESSTHAN executed")
-            elif operation == ">=":
-                logging.debug("MORETHANEQL executed")
-            elif operation == "<=":
-                logging.debug("LESSTHANEQL executed")
-            elif operation == "<>":
-                logging.debug("NOT executed")
-            elif operation == "==":
-                logging.debug("EQUAL executed")
+            elif operation in ["+", "-", "*", "/", ">", "<", ">=", "<=", "<>", "=="]:
+                self.arithmeticOperations(quad)
             
+            inst_ptr += 1
+            
+    def arithmeticOperations(self, quad):
+        operation = quad.operator
+        left = self.memoryManager.get(quad.operLeft)
+        right = self.memoryManager.get(quad.operRight)
+        
+        if operation == "+":
+            logging.debug("SUM executed")
+            self.memoryManager.set(quad.result, left + right)
+        elif operation == "-":
+            logging.debug("SUB executed")
+            self.memoryManager.set(quad.result, left - right)
+        elif operation == "*":
+            logging.debug("MULT executed")
+            self.memoryManager.set(quad.result, left * right)
+        elif operation == "/":
+            logging.debug("DIV executed")
+            self.memoryManager.set(quad.result, left / right)
+        elif operation == ">":
+            logging.debug("MORETHAN executed")
+            self.memoryManager.set(quad.result, left > right)
+        elif operation == "<":
+            logging.debug("LESSTHAN executed")
+            self.memoryManager.set(quad.result, left < right)
+        elif operation == ">=":
+            logging.debug("MORETHANEQL executed")
+            self.memoryManager.set(quad.result, left >= right)
+        elif operation == "<=":
+            logging.debug("LESSTHANEQL executed")
+            self.memoryManager.set(quad.result, left <= right)
+        elif operation == "<>":
+            logging.debug("NOT executed")
+            self.memoryManager.set(quad.result, left != right)
+        elif operation == "==":
+            logging.debug("EQUAL executed")
+            self.memoryManager.set(quad.result, left == right)
+
 
 
 if __name__ == "__main__":

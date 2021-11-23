@@ -5,8 +5,9 @@
 # ----------------------------------------
 
 
-from memory import AddressManager
+from memory.address_manager import AddressManager
 import scanner
+
 # Import lex and yacc
 import ply.lex as lex
 import ply.yacc as yacc
@@ -772,6 +773,9 @@ yacc.yacc()
 def generateObjectFile():
     global programName, dirFuncs, constantTable, quadruples
     with open(programName + ".lumos", "w+") as file:
+        # Memory
+        file.write("@MEMORY\n")
+
         # Functions
         file.write("@FUNCTIONS\n")
         for func in dirFuncs.functions.values():

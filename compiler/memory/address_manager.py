@@ -9,16 +9,16 @@ class AddressManager:
         self.tempAddresses = {}
         self.cteAddresses = {}
 
-        self.space = 20000
-        self.typeRange = self.space // (len(Type) - 1)
+        self.size = 20000
+        self.typeRange = self.size // (len(Type) - 1)
 
         for idx, type in enumerate(Type):
             if type == Type.VOID:
                 break
-            self.globalAddresses[type] = self.space * 0 + idx * self.typeRange
-            self.localAddresses[type] = self.space * 1 + idx * self.typeRange
-            self.tempAddresses[type] = self.space * 2 + idx * self.typeRange
-            self.cteAddresses[type] = self.space * 3 + idx * self.typeRange
+            self.globalAddresses[type] = self.size * 0 + idx * self.typeRange
+            self.localAddresses[type] = self.size * 1 + idx * self.typeRange
+            self.tempAddresses[type] = self.size * 2 + idx * self.typeRange
+            self.cteAddresses[type] = self.size * 3 + idx * self.typeRange
             print("GLOBAL", type, "START", self.globalAddresses[type])
             print("LOCAL", type, "START", self.localAddresses[type])
             print("TEMP", type, "START", self.tempAddresses[type])
@@ -48,14 +48,16 @@ class AddressManager:
         for idx, type in enumerate(Type):
             if type == Type.VOID:
                 break
-            self.localAddresses[type] = self.space * 1 + idx * self.typeRange
-            self.tempAddresses[type] = self.space * 2 + idx * self.typeRange
+            self.localAddresses[type] = self.size * 1 + idx * self.typeRange
+            self.tempAddresses[type] = self.size * 2 + idx * self.typeRange
     
     def getLimits(self):
         local = self.localAddresses
         temp = self.tempAddresses
         return (local, temp)
         
+
+
 '''
 ADDRESS SYSTEM MAP:
 <GLOBAL>: 

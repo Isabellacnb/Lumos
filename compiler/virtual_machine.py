@@ -7,9 +7,10 @@ from os.path import exists
 from structures import *
 
 class Phase(Enum):
-    FUNCDIR = 0
-    CONSTANTS = 1
-    QUADS = 2
+    MEMORY = 0
+    FUNCDIR = 1
+    CONSTANTS = 2
+    QUADS = 3
 
 class VirtualMachine:
     def __init__(self, file_path):
@@ -36,7 +37,10 @@ class VirtualMachine:
 
             for line in lines:
                 # Check if we have reached new loading phase
-                if "@FUNCTIONS" in line:
+                if "@MEMORY" in line:
+                    phase = Phase.MEMORY
+                    continue
+                elif "@FUNCTIONS" in line:
                     phase = Phase.FUNCDIR
                     continue
                 elif "@CONSTANTS" in line:
@@ -84,8 +88,8 @@ class VirtualMachine:
                     quadElements = line.split('|')
                     quad = Quadruple(quadElements[0], quadElements[1], quadElements[2], quadElements[3])
                     self.quad_list.push(quad)
-        except Exception as e:
-            print("ERROR :: DURING OBJECT CODE LOADING AN ERROR OCCURED", e)
+        # except Exception as e:
+        #     print("ERROR :: DURING OBJECT CODE LOADING AN ERROR OCCURED", e)
         finally:
             reader.close()
 

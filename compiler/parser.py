@@ -775,7 +775,9 @@ def generateObjectFile():
     with open(programName + ".lumos", "w+") as file:
         # Memory
         file.write("@MEMORY\n")
-
+        for i in range(len(Scope)):
+            file.write(serializeMemory(i))
+            file.write("\n")
         # Functions
         file.write("@FUNCTIONS\n")
         for func in dirFuncs.functions.values():
@@ -820,6 +822,44 @@ def serializeQuad(ind:int, quad:Quadruple):
     output += str(quad.result)
     return output
 
+def serializeMemory(scopeInd:int):
+    global addressManager
+    # scope | bool | int | float | char | string
+    output = ""
+    # Global
+    if scopeInd == 0:
+        output = "global|"
+        for t in Type:
+            if t == Type.VOID:
+                continue
+            output += str(addressManager.globalAddresses[t]) + "|"
+    # Local
+    elif scopeInd == 1:
+        output = "local|"
+        for t in Type:
+            if t == Type.VOID:
+                continue
+            output += str(addressManager.localAddresses[t]) + "|"
+    # Temp
+    elif scopeInd == 2:
+        output = "temp|"
+        for t in Type:
+            if t == Type.VOID:
+                continue
+            output += str(addressManager.tempAddresses[t]) + "|"
+    # Constant
+    elif scopeInd == 3:
+        output = "constant|"
+        for t in Type:
+            if t == Type.VOID:
+                continue
+            output += str(addressManager.cteAddresses[t]) + "|"
+    
+    return output[:-1] # delete last |
+
+# =================================
+# Main Function to run parser
+# =================================  
 if __name__ == '__main__':
 
     try:

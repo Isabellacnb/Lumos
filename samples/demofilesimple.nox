@@ -3,6 +3,14 @@ vars
 int i , j;
 bool check;
 
+task max(int a , int b) : int {
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
 main {
     vars
     int x, i;
@@ -10,8 +18,8 @@ main {
     float y;
 
     x = 10;
-    y = x + 0.1;
-    println(x > 1);
+    i = 12;
+    println(max(x, i));
 }
 
 nox;

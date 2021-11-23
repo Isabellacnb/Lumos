@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from os.path import exists
+from memory.activation_record import ActivationRecord
 from memory.memory_manager import MemoryManager
 
 from structures import *
@@ -28,7 +29,7 @@ class VirtualMachine:
         self.load_file()
 
         self.memoryManager = MemoryManager(self.globalAddresses, self.localAddresses, self.tempAddresses, self.cteAddresses)
-        
+        self.currFuncCall = None
         for const in self.constantTable.variables.values():
             self.memoryManager.set(const.address, const.value)
     
@@ -173,19 +174,56 @@ class VirtualMachine:
                 logging.debug("GOTOF executed")
                 condition = self.memoryManager.get(quad.operLeft)
                 if condition == False:
-                    inst_ptr = quad.result
+                    inst_ptr = int(quad.result)
                     continue
+            
+            elif operation == "GOSUB":
+                logging.debug("GOSUB executed")
+                func = self.funcDir.find(quad.operLeft)
+                if len(func.parameters) != len(self.memoryManager.callStack.top().parameters):
+                    print("ERROR :: Incorrect number of arguments given when calling", func.name, ", expected", len(func.paramters), "got", len(self.memoryManager.callStack.top().parameters))
+                    exit()
+                
+                if quad.result != "None":
+                    self.memoryManager.callStack.top().returnAddress = int(quad.result)
+                
+                self.memoryManager.callStack.top().callbackPos = inst_ptr + 1
 
-            elif operation == "END":
-                logging.debug("END executed")
-                print("Mischief managed")
-                return
+                inst_ptr = func.quadruplePosition
+                continue
+
+            elif operation == "ERA":
+                logging.debug("ERA executed")
+                func = self.funcDir.find(quad.operLeft)
+                act_record = ActivationRecord(func.limits)
+                self.memoryManager.callStack.push(act_record)
+                self.currFuncCall = func.name
+            
+            elif operation == "PARAM":
+                logging.debug("PARAM executed")
+                paramType = self.memoryManager.getTypeOf(int(quad.operLeft), Scope.LOCAL)
+                paramInd = int(quad.result)
+
+                func = self.funcDir.find(self.currFuncCall)
+                if func.parameters[paramInd] != paramType:
+                    print("ERROR :: Type mismatch when calling", func.name, "expected", func.parameters[paramInd].name, "got", paramType.name)
+                    exit()
+                self.memoryManager.callStack.top().parameters.append(paramType)
 
             elif operation == "ENDFUNC":
                 logging.debug("ENDFUNC executed")
 
+                inst_ptr = self.memoryManager.callStack.top().callbackPosition
+                continue
+
             elif operation == "RETURN":
                 logging.debug("RETURN executed")
+                returnAddress = self.memoryManager.callStack.top().returnAddress
+                value = self.memoryManager.get(quad.result)
+                self.memoryManager.set(returnAddress, value)
+                
+                inst_ptr = self.memoryManager.callStack.top().callbackPosition
+                continue
 
             elif operation == "PRINT":
                 logging.debug("PRINT executed")
@@ -194,7 +232,7 @@ class VirtualMachine:
 
             elif operation == "PRINTLN":
                 logging.debug("PRINTLN executed")
-                print('\n')
+                print('\n', end="")
 
             elif operation == "READ":
                 logging.debug("READ executed")
@@ -203,12 +241,18 @@ class VirtualMachine:
 
             elif operation == "=":
                 logging.debug("ASSIGN executed")
+
                 value = self.memoryManager.get(quad.operLeft)
                 self.memoryManager.set(quad.result, value)
 
             # Arithmetic operations
             elif operation in ["+", "-", "*", "/", ">", "<", ">=", "<=", "<>", "=="]:
                 self.arithmeticOperations(quad)
+            
+            elif operation == "END":
+                logging.debug("END executed")
+                print("Mischief managed")
+                return
             
             inst_ptr += 1
             
@@ -265,5 +309,5 @@ if __name__ == "__main__":
     start_time = datetime.now()
     virtual_machine.run()
     end_time = datetime.now()
-
-    logging.debug("EXECUTION COMPLETED in", end_time - start_time)
+    exe_time = end_time - start_time
+    logging.debug("EXECUTION COMPLETED in " + str(exe_time.total_seconds()) + " secs")

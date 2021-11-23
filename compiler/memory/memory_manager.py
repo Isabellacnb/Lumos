@@ -93,8 +93,10 @@ class MemoryManager:
     
     # Translate string to the specified type
     def stringToType(self, value, type):
-        if type == Type.BOOL:
-            return True if type == "true" else False
+        if not isinstance(value, str):
+            return value
+        elif type == Type.BOOL:
+            return True if value == "true" or value == "True" else False
         elif type == Type.INT:
             return int(value)
         elif type == Type.FLOAT:

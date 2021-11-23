@@ -5,7 +5,8 @@ class ActivationRecord:
         self.parameters = []
         self.localAddresses = memoryLimits[0]
         self.temporaryAddresses = memoryLimits[1]
-        #TODO: parameters, call position, return address
+        self.callbackPosition = -1
+        self.returnAddress = -1
 
         self.size = 20000
 

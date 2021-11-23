@@ -5,3 +5,6 @@ from .semantic_cube import *
 from .quadruple import *
 from .quadruple_list import *
 from .scope import *
+from .function import *
+from .variable import *
+from .constant import *

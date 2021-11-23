@@ -4,29 +4,6 @@
 # -- Lumos : Variable Table
 # -----------------------------------------------
 
-class Variable:
-    def __init__(self, name, type):
-        self.name = name
-        self.type = type
-        self.address = -1
-        self.value = None
-    
-    def __str__(self) -> str:
-        return "[" + self.name + " " + str(self.type) + " " + str(self.address) + "]"
-
-class Constant:
-    def __init__(self, address, name, type, value):
-        self.address = address
-        self.name = name
-        self.type = type
-        self.value = value
-    
-    def address(self):
-        return self.address
-    
-    def __str__(self) -> str:
-        return 'Constant: ' + str(self.name) + ', ' + str(self.type) + ', ' + str(self.address)
-
 class VariableTable:
     def __init__(self):
         self.variables = {}

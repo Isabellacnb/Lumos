@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from os.path import exists
+from memory.memory_manager import MemoryManager
 
 from structures import *
 
@@ -19,7 +20,14 @@ class VirtualMachine:
         self.funcDir = FunctionDirectory()
         self.constantTable = VariableTable()
 
+        self.globalAddresses = {}
+        self.localAddresses = {}
+        self.tempAddresses = {}
+        self.cteAddresses = {}
+
         self.load_file()
+
+        self.memoryManager = MemoryManager(self.globalAddresses, self.localAddresses, self.tempAddresses, self.cteAddresses)
     
     def load_file(self):
         if not exists(self.file_path):
@@ -51,7 +59,18 @@ class VirtualMachine:
                     continue
 
                 # Based on phase, perform loading
-                if phase == Phase.FUNCDIR:
+                if phase == Phase.MEMORY:
+                    # scope | bool | int | float | char | string
+                    memoryElements = line.split('|')
+                    memoryScope = memoryElements[0]
+                    memoryDict = {}
+                    for t in Type:
+                        if t == Type.VOID:
+                            continue
+                        memoryDict[t] = int(memoryElements[t.value + 1])
+                    self.assignDict(memoryScope, memoryDict)
+
+                elif phase == Phase.FUNCDIR:
                     # name|returnType|paramTypeArray|quadPosition|localLimitsArray|tempLimitsArray
                     funcElements = line.split('|')
                     funcName = funcElements[0]
@@ -120,6 +139,16 @@ class VirtualMachine:
             return False
         else:
             return int(value)
+    
+    def assignDict(self, memoryScope, memoryDict):
+        if memoryScope == "global":
+            self.globalAddresses = memoryDict
+        elif memoryScope == "local":
+            self.localAddresses = memoryDict
+        elif memoryScope == "temp":
+            self.tempAddresses = memoryDict
+        elif memoryScope == "constant":
+            self.cteAddresses = memoryDict
 
     # ============================
     # Executioner
@@ -128,8 +157,8 @@ class VirtualMachine:
         inst_ptr = 0
 
         # Switch case to execute quadruple by quadruple 
-        for quad in self.quad_list:
-            operation = quad[0]
+        for quad in self.quad_list.quads:
+            operation = quad.operator
 
             if operation == "GOTO":
                 logging.debug("GOTO exectued")

@@ -1,0 +1,26 @@
+lumos fibonacci;
+
+!! - Program to print fibonacci sequence
+
+main {
+    vars
+    int a, b, next, number;
+
+    a = 0;
+    b = 1;
+
+    print("Enter number of terms: ");
+    read(number);
+
+    !! - Print first two numbers
+    print("Fibonacci: ", a, ", ", b);
+    next = a + b;
+    while (next <= number) {
+        print(", ", next);
+        a = b;
+        b = next;
+        next = a + b;
+    }
+}
+
+nox;

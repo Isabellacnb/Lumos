@@ -11,9 +11,9 @@ class MemoryManager:
         self.size = 20000
 
         # Activation Record
-        self.callStack = Stack()
-        self.exeStack = Stack()
-        self.callStack.push(ActivationRecord((self.localAddresses, self.tempAddresses)))
+        self.executeStack = Stack()
+        self.apparateStack = Stack()
+        self.executeStack.push(ActivationRecord((self.localAddresses, self.tempAddresses)))
 
         # Create arrays with the n number of addresses used
         self.baseSize = self.size // (len(Type) - 1)
@@ -42,7 +42,7 @@ class MemoryManager:
             return self.cteMemory[addressType][address]
         # Handled by Activation Record as it's temp or local
         else:
-            return self.callStack.top().get(addressScope, address, addressType)
+            return self.executeStack.top().get(addressScope, address, addressType)
 
     def set(self, address, value):
         address = int(address) # safe check
@@ -59,7 +59,7 @@ class MemoryManager:
             self.cteMemory[addressType][address] = value
         else:
             value = self.stringToType(value, addressType)
-            self.callStack.top().set(addressScope, address, value, addressType)
+            self.executeStack.top().set(addressScope, address, value, addressType)
 
     # ==================
     # Inner management functions

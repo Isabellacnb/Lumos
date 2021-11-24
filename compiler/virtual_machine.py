@@ -171,7 +171,11 @@ class VirtualMachine:
             quad = self.quad_list.at(inst_ptr)
             operation = quad.operator
 
-            if operation == "GOTO":
+            # Arithmetic operations
+            if operation in ["+", "-", "*", "/", ">", "<", ">=", "<=", "<>", "==", "and", "or"]:
+                self.arithmeticOperations(quad)
+
+            elif operation == "GOTO":
                 logging.debug("GOTO exectued")
                 inst_ptr = int(quad.result)
                 continue
@@ -186,58 +190,53 @@ class VirtualMachine:
             elif operation == "GOSUB":
                 logging.debug("GOSUB executed")
                 func = self.funcDir.find(quad.operLeft)
-                #TODO check if necessary
-                # if len(func.parameters) != len(self.memoryManager.callStack.top().parameters):
-                #     print("ERROR :: Incorrect number of arguments given when calling", func.name, ", expected", len(func.paramters), "got", len(self.memoryManager.callStack.top().parameters))
-                #     exit()
-                
+
+                act_record = self.memoryManager.apparateStack.pop()
+                act_record.callbackPosition = inst_ptr + 1
+
                 if quad.result != "None":
-                    self.memoryManager.callStack.top().returnAddress = int(quad.result)
-                
-                self.memoryManager.callStack.top().callbackPosition = inst_ptr + 1
+                    act_record.returnAddress = quad.result
+
+                self.memoryManager.executeStack.push(act_record)
 
                 inst_ptr = func.quadruplePosition
                 continue
 
             elif operation == "ERA":
                 logging.debug("ERA executed")
-                func = self.funcDir.find(quad.operLeft)
+                callName = quad.operLeft
+                func = self.funcDir.find(callName)
                 act_record = ActivationRecord(func.limits)
-                self.memoryManager.callStack.push(act_record)
-                self.currFuncCall = func.name
+                act_record.parameters = func.parameters
+                self.memoryManager.apparateStack.push(act_record)
             
             elif operation == "PARAM":
                 logging.debug("PARAM executed")
-                func = self.funcDir.find(self.currFuncCall)
+                paramAddress = quad.operLeft
+                value = self.memoryManager.get(paramAddress)
                 paramInd = int(quad.result)
 
-                act_record = self.memoryManager.callStack.pop()
-                paramValue = self.memoryManager.get(quad.operLeft)
-                paramScope = self.memoryManager.getScopeOf(int(quad.operLeft))
-                paramType = self.memoryManager.getTypeOf(int(quad.operLeft), paramScope)
-                self.memoryManager.callStack.push(act_record)
-
-                if func.parameters[paramInd].type != paramType:
-                    print("ERROR :: Type mismatch when calling", func.name, "expected", func.parameters[paramInd].type, "got", paramType.name)
-                    exit()
-
-                self.memoryManager.set(func.parameters[paramInd].address, paramValue)
+                act_record = self.memoryManager.apparateStack.top()
+                self.memoryManager.executeStack.push(act_record)
+                self.memoryManager.set(act_record.parameters[paramInd].address, value)
+                self.memoryManager.executeStack.pop()
 
             elif operation == "ENDFUNC":
                 logging.debug("ENDFUNC executed")
-
-                inst_ptr = self.memoryManager.callStack.top().callbackPosition
+                inst_ptr = self.memoryManager.executeStack.top().callbackPosition
+                self.memoryManager.executeStack.pop()
                 continue
 
             elif operation == "RETURN":
                 logging.debug("RETURN executed")
-                returnAddress = self.memoryManager.callStack.top().returnAddress
-                value = self.memoryManager.get(quad.result)
-                self.memoryManager.set(returnAddress, value)
+                act_record = self.memoryManager.executeStack.top()
+                if quad.result:
+                    value = self.memoryManager.get(quad.result)
+                    self.memoryManager.set(act_record.returnAddress, value)
                 
-                inst_ptr = self.memoryManager.callStack.top().callbackPosition
+                self.memoryManager.executeStack.pop()
+                inst_ptr = act_record.callbackPosition
 
-                self.memoryManager.callStack.pop()
                 continue
 
             elif operation == "PRINT":
@@ -259,10 +258,6 @@ class VirtualMachine:
 
                 value = self.memoryManager.get(quad.operLeft)
                 self.memoryManager.set(quad.result, value)
-
-            # Arithmetic operations
-            elif operation in ["+", "-", "*", "/", ">", "<", ">=", "<=", "<>", "=="]:
-                self.arithmeticOperations(quad)
             
             elif operation == "END":
                 logging.debug("END executed")
@@ -309,6 +304,12 @@ class VirtualMachine:
         elif operation == "==":
             logging.debug("EQUAL executed")
             self.memoryManager.set(quad.result, left == right)
+        elif operation == "and":
+            logging.debug("AND executed")
+            self.memoryManager.set(quad.result, left and right)
+        elif operation == "or":
+            logging.debug("OR executed")
+            self.memoryManager.set(quad.result, left or right)
 
 
 

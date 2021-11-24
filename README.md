@@ -1,4 +1,6 @@
-# <img width="291" alt="lumos_logo" src="https://user-images.githubusercontent.com/31547303/135665320-50f1fd46-796e-4c9f-ba09-8e4ea8046145.png">
+<img width="443" alt="Screen Shot 2021-11-24 at 11 23 38" src="https://user-images.githubusercontent.com/31547303/143286034-4e2bcded-9393-48b6-944e-1df0cdae3ed5.png">
+
+---
 
 ### Avances
 

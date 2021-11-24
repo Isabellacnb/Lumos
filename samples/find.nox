@@ -1,0 +1,48 @@
+lumos find;
+vars
+int arr[10], size;
+
+!! - Function to display arrays
+task search(int n) : bool {
+    vars
+    int i;
+    
+    i = 0;
+    while (i < size) {
+        if (arr[i] == n) {
+            return true;
+        }
+        i = i + 1;
+    }
+    return false;
+}
+
+main {
+    vars
+    int n, num, i;
+
+    size = 10;
+    num = 15;
+    i = 0;
+
+    !! - Read input
+    print("Enter number to find: ");
+    read(n);
+
+    !! - Fill array
+    print("[ ");
+    while (i < size) {
+        arr[i] = num - i;
+        print(arr[i], " ");
+        i = i + 1;
+    }
+    println("]");
+
+    if (search(n)) {
+        print("Number ", n, " was found in the array.");
+    } else {
+        print("Number ", n, " was not found in the array.");
+    }
+}
+
+nox;

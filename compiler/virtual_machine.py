@@ -82,11 +82,13 @@ class VirtualMachine:
                     
                     funcParams = []
                     params = funcElements[2].split('#')
-                    for param in params:
-                        paramElements = param.split("!")
-                        paramVar = Variable(paramElements[0], Type(int(paramElements[1])))
-                        paramVar.address = int(paramElements[2])
-                        funcParams.append(paramVar)
+                    print(params)
+                    if params[0] != '':
+                        for param in params:
+                            paramElements = param.split("!")
+                            paramVar = Variable(paramElements[0], Type(int(paramElements[1])))
+                            paramVar.address = int(paramElements[2])
+                            funcParams.append(paramVar)
                     
                     funcPos = int(funcElements[3])
                     localLimits = funcElements[4][1:-1].split(',')
@@ -165,7 +167,6 @@ class VirtualMachine:
     # ============================
     def run(self):
         inst_ptr = 0
-
         # Switch case to execute quadruple by quadruple 
         while (True):
             quad = self.quad_list.at(inst_ptr)
@@ -269,12 +270,12 @@ class VirtualMachine:
                 index = self.memoryManager.get(quad.operLeft)
                 dim = int(quad.result)
                 if index < 0 or index >= dim:
-                    print("ERROR :: Index is out of range")
+                    print("ERROR :: Index", index, "is out of range")
                     exit()
 
             elif operation == "END":
                 logging.debug("END executed")
-                print("\n✨Mischief managed✨")
+                print("\n\n✨Mischief managed✨")
                 return
             
             inst_ptr += 1

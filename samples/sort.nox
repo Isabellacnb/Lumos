@@ -26,14 +26,15 @@ task sort(int size) : void {
     !! - Check
     while (swapped) {
         swapped = false;
+        i = 0;
 
         !! - Loop through all numbers in array
-        while (i < size) {
+        while (i < size - 1) {
 
             !! - Compare values
             if (arr[i] > arr[i + 1]) {
                 tmp = arr[i];
-                arr[i] = arr[i + 1]
+                arr[i] = arr[i + 1];
                 arr[i + 1] = tmp;
                 swapped = true;
             }
@@ -42,24 +43,29 @@ task sort(int size) : void {
             i = i + 1;
         }
     }
-    print("Sorted: ");
-    display(size);
 }
 
 main {
     vars
-    int size, i;
+    int size, i, tmp;
 
     i = 0;
     size = 5;
 
-    while (i < 5) {
-        arr[i] = size - i;
+    while (i < size) {
+        print("Enter number: ");
+        read(tmp);
+        arr[i] = tmp;
         i = i + 1;
     }
     print("Not sorted: ");
     display(size);
+
     sort(size);
+
+    println(" ");
+    print("Sorted: ");
+    display(size);
 }
 
 nox;

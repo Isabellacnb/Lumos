@@ -1,0 +1,131 @@
+lumos matrixMultiplication;
+vars
+int a[3][3], b[3][3], x[3][3], ra, ca, rb, cb;
+
+!! - Function to fill and display two matrices
+task fill() : void {
+    vars
+    int i, j;
+
+    !! - Fill first matrix
+    i = 0;
+    j = 0;
+    println("Fill in first matrix: ");
+    while (i < ra) {
+        while (j < ca) {
+            print("Enter value in [", i, "][", j, "]: ");
+            read(a[i][j]);
+            j = j + 1;
+        }
+        j = 0;
+        i = i + 1;
+    }
+
+    
+    i = 0;
+    j = 0;
+    !! - Fill second matrix
+    println("Fill in second matrix: ");
+    while (i < rb) {
+        while (j < cb) {
+            print("Enter value in [", i, "][", j, "]: ");
+            read(b[i][j]);
+            j = j + 1;
+        }
+        j = 0;
+        i = i + 1;
+    }
+
+    !! - Show matrices
+    i = 0;
+    j = 0;
+    while (i < ra) {
+        while (j < ca) {
+            print(a[i][j], " ");
+            j = j + 1;
+        }
+        println(" ");
+        j = 0;
+        i = i + 1;
+    }
+
+    println(" ");
+
+    i = 0;
+    j = 0;
+    while (i < rb) {
+        while (j < cb) {
+            print(b[i][j], " ");
+            j = j + 1;
+        }
+        println(" ");
+        j = 0;
+        i = i + 1;
+    }
+
+    println(" ");
+
+
+}
+
+!! - Function to do matrix multiplication
+task multiply() : void {
+    vars
+    int i, j, k;
+
+    i = 0;
+    j = 0;
+    !! - Fill product matrix with 0s
+    while (i < ra) {
+        while (j < cb) {
+            x[i][j] = 0;
+            j = j + 1;
+        }
+        j = 0;
+        i = i + 1;
+    }
+
+    i = 0;
+    j = 0;
+    k = 0;
+    !! - Matrix multiplication
+    while (i < ra) {
+        while (j < cb) {
+            while (k < ca) {
+                x[i][j] = x[i][j] + a[i][k] * b[k][j];
+                k = k + 1;
+            }
+            j = j + 1;
+            k = 0;
+        }
+        j = 0;
+        i = i + 1;
+    }
+
+    j = 0;
+    i = 0;
+    !! - Display matrix
+    println("The product of two matrices is: ");
+    while (i < ra) {
+        while (j < cb) {
+            print(x[i][j], " ");
+            j = j + 1;
+        }
+        j = 0;
+        i = i + 1;
+        println(" ");
+    }
+}
+
+main {
+    ra = 3;
+    ca = 3;
+    rb = 3;
+    cb = 3;
+
+    fill();
+    multiply();
+    
+}
+
+nox;

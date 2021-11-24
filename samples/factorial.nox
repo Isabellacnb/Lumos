@@ -5,18 +5,18 @@ lumos factorial;
 main {
     vars
     int number, i;
-    float factorial;
+    int factorial;
 
     !! - Initialize variables
     i = 1;
-    factorial = 1.0;
+    factorial = 1;
     
     !! - Input
     print("Enter positive number: ");
     read(number);
 
     !! - Check number is positive
-    if (n < 0) {
+    if (number < 0) {
 
         print("Can't calculate factorial of a negative number!");
 

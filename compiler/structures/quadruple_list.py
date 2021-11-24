@@ -3,7 +3,6 @@ class QuadrupleList():
         self.quads = []
     
     def push(self, quad):
-        print("ADDED ", str(quad))
         self.quads.append(quad)
     
     def at(self, ind):

@@ -155,7 +155,8 @@ def p_return(p):
 # TODO: INPUT WITH INDEX SELECTOR
 # Rule to raed
 def p_read(p):
-    '''read : READ "(" ID lookupID addOperandId delVarName delVarType ")" addReadQuadruple '''
+    '''read : READ "(" ID lookupID addOperandId delVarName delVarType ")" addReadQuadruple 
+            | READ "(" ID lookupID addOperandId array_dim_index ")" addReadQuadruple'''
 
 # Rule to write
 def p_write(p):
@@ -289,7 +290,8 @@ def p_type_func(p):
 # TODO: check for functions without parameters
 # Rule to define function parameter
 def p_param(p):
-    '''param : type ID addParameter mult_params'''
+    '''param : type ID addParameter mult_params
+            | empty'''
 
 # Rule to call for multiple function parameters
 def p_mult_params(p):
@@ -580,7 +582,7 @@ def p_lookupID(p):
     else:
         tVarName.push(var.name)
         tVarType.push(var.type)
-        print("Found: " + str(var))
+        #TODO: delete print("Found: " + str(var))
 
 def generateQuadrupleExpression(operators):
     global operandStack, operatorStack, typeStack, quadruples
@@ -603,7 +605,7 @@ def generateQuadrupleExpression(operators):
         # TODO: Check if global or local temporary variable (maybe not necessary since we don't distinguish global and local temporary variables)
         quadruple = Quadruple(operator, operLeft, operRight, tmpAddress)
         quadruples.push(quadruple)
-        print(str(quadruple) + " " + str(resultType))
+        #print(str(quadruple) + " " + str(resultType))
 
 def p_logicalQuadruple(p):
     'logicalQuadruple :'
@@ -629,12 +631,14 @@ def p_minusQuadruple(p):
     if type is Type.STRING or type is Type.CHAR or type is Type.BOOL:
         print("ERROR :: Can't negate expression.")
         return
-    # TODO: addCte(-1) lookup constant in constant table
-    # get symbol
-    # check scope and generate temporary
-    # quadruples.push(Quadruple('*', -1, rightOperand, -1))
-    # push temporary to operand stack
-    # push result type to type stack
+    createConstant(-1)
+    cte = constantTable.find("-1")
+    resultType = getResultType(cte.type, "*", type)
+    address = addressManager.nextAddress(scope, Type.INT)
+    quad = Quadruple('*', cte.address, rightOperand, address)
+    quadruples.push(quad)
+    operandStack.push(address)
+    typeStack.push(resultType)
 
 def p_addFakeBottom(p):
     'addFakeBottom :'
@@ -730,7 +734,6 @@ def p_endWhileCondition(p):
 def assignJump(position):
     global jumpStack, quadruples
     jump = jumpStack.pop()
-    print(jumpStack)
     goToQuad = quadruples.at(jump)
     goToQuad.result = position
 
@@ -756,7 +759,7 @@ def p_saveFunctionName(p):
     'saveFunctionName :'
     global tFuncName
     tFuncName = p[-1]
-    print("New function - ", tFuncName)
+    # print("New function - ", tFuncName)
 
 def p_saveFunctionType(p):
     'saveFunctionType :'
@@ -784,7 +787,7 @@ def p_endFunction(p):
     memoryLimits = addressManager.getLimits()
     currFunc = dirFuncs.find(tFuncName)
     currFunc.limits = memoryLimits
-    print(tFuncName, dirFuncs.find(tFuncName).limits)
+    #print(tFuncName, dirFuncs.find(tFuncName).limits)
 
     varsLocal.clear()
     addressManager.resetAddresses()
@@ -926,9 +929,10 @@ def serializeFunction(func:Function):
     # name|returnType|{paramName!paramType!paramAddress}|quadPosition|localLimitsArray|tempLimitsArray
     output = str(func.name) + "|"
     output += str(func.type.value) + "|"
-    for paramVar in func.parameters:
-        output += paramVar.name + "!" + str(paramVar.type.value) + "!" + str(paramVar.address) + "#"
-    output = output[:-1]
+    if func.parameters:
+        for paramVar in func.parameters:
+            output += paramVar.name + "!" + str(paramVar.type.value) + "!" + str(paramVar.address) + "#"
+        output = output[:-1]
     output += "|"
     output += str(func.quadruplePosition) + "|"
     output += str(list(func.limits[0].values())) + "|"
@@ -995,16 +999,15 @@ if __name__ == '__main__':
 
     try:
         print("""
-    __                              
-   / /   __  ______ ___  ____  _____
-  / /   / / / / __ `__ \/ __ \/ ___/
- / /___/ /_/ / / / / / / /_/ (__  ) 
-/_____/\__,_/_/ /_/ /_/\____/____/  
-                                    
-""")
-        # TODO: remove hard coded file
-        file_name = input('Enter file name:')
+            __                              
+           / /   __  ______ ___  ____  _____
+          / /   / / / / __ `__ \/ __ \/ ___/
+         / /___/ /_/ / / / / / / /_/ (__  ) 
+        /_____/\__,_/_/ /_/ /_/\____/____/  
+         """)
+        file_name = input('Enter file name: ')
         f = open(file_name, "r")
+        # TODO: remove hard coded file
         #f = open("../samples/sort.nox", "r")
         file = f.read()
         f.close()
@@ -1013,9 +1016,10 @@ if __name__ == '__main__':
     
     #Parse the file using grammar
     yacc.parse(file)
-    print("Sucessfully parsed...")
+    print("Sucessfully parsed...\n")
+    print("Quadruples generated: ")
     print(str(quadruples))
-    print(str(dirFuncs))
+    #print(str(dirFuncs))
     generateObjectFile()
     # print("GLOBAL")
     # print(str(varsGlobal))

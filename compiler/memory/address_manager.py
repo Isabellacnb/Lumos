@@ -19,10 +19,10 @@ class AddressManager:
             self.localAddresses[type] = self.size * 1 + idx * self.typeRange
             self.tempAddresses[type] = self.size * 2 + idx * self.typeRange
             self.cteAddresses[type] = self.size * 3 + idx * self.typeRange
-            print("GLOBAL", type, "START", self.globalAddresses[type])
-            print("LOCAL", type, "START", self.localAddresses[type])
-            print("TEMP", type, "START", self.tempAddresses[type])
-            print("CTE", type, "START", self.cteAddresses[type])
+            # print("GLOBAL", type, "START", self.globalAddresses[type])
+            # print("LOCAL", type, "START", self.localAddresses[type])
+            # print("TEMP", type, "START", self.tempAddresses[type])
+            # print("CTE", type, "START", self.cteAddresses[type])
 
     def nextAddress(self, scope, type, size=1):
         #TODO: Check next address is not out of bounds

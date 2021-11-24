@@ -16,7 +16,7 @@ class Stack:
 
     def top(self):
         if len(self.items) == 0:
-            print("STACK EMPTY")
+            return
         else:
             return self.items[-1]
 

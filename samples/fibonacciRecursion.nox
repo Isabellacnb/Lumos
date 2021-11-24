@@ -1,4 +1,4 @@
-lumos fibonacciRecursive;
+lumos fibonacciRecursion;
 
 !! - Program to print fibonacci's nth term using Recursion
 

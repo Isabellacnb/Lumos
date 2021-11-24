@@ -105,20 +105,32 @@ def p_var_comma(p):
     '''var_comma : "," var_list 
                 | empty'''
 
+# Arrays
+# =============================
 # Rule to define whether variable has dimensions or not
-# TODO: array dimensions
 def p_var_array(p):
-    '''var_array : array_dim 
+    '''var_array : array_dim initArrayDim
                 | empty'''
 
 # TODO: arrays (check if [exp] is calling correct rule)
 # Arrays
 # ----------------------------
 def p_array_dim(p):
-    '''array_dim : "[" exp "]" mult_dim'''
+    '''array_dim : "[" CTE_INT addDim "]" mult_dim'''
 
 def p_mult_dim(p):
     '''mult_dim : array_dim 
+                | empty'''
+
+# Rule to assign value to a variable
+def p_arr_assign(p):
+    '''arr_assign : ID lookupID array_dim_index "=" addOperator super_expression addAssignQuadruple'''
+
+def p_array_dim_index(p):
+    '''array_dim_index : setVarDim "[" addFakeBottom exp delFakeBottom "]" mult_dim_index'''
+
+def p_mult_dim_index(p):
+    '''mult_dim_index : "[" exp "]" mult_dim_index
                 | empty'''
 
 # Statements
@@ -132,6 +144,7 @@ def p_stmt(p):
 # Rule to define whether line will assign, write, return, call function or read
 def p_stmt_endl(p):
     '''stmt_endl : assign 
+                | arr_assign
                 | write 
                 | return 
                 | call_func 
@@ -319,9 +332,9 @@ def p_while(p):
 # Error rule for syntax errors
 def p_error(p):
     if p:
-        print("Syntax error at '%s' at line '%d'" % (p.value, p.lineno))
+        print("ERROR :: Syntax error at '%s' at line '%d'" % (p.value, p.lineno))
     else:
-        print("Syntax error at EOF")
+        print("ERROR :: Syntax error at EOF")
     exit(1)
 
 # Empty rule
@@ -394,6 +407,39 @@ def createConstant(constValue):
         const = Constant(address, constValue, constType, constValue)
         constantTable.insert(const)
 
+# =================================
+# Array Logic #
+# =================================
+
+def p_addDim(p):
+    'addDim :'
+    dimSize = p[-1]
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(tVarName.top())
+        var.pushDimension(dimSize)
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(tVarName.top())
+        if var is None:
+            var = varsGlobal.find(tVarName.top())
+        if var is None:
+            print("ERROR ::", tVarName.top(), "is not a local or global variable!")
+            exit()
+        var.pushDimension(dimSize)
+
+def p_initArrayDim(p):
+    'p_initArrayDim :'
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(tVarName.top())
+        dimSize = var.size() - 1
+        if dimSize > 0:
+            addressManager.nextAddress(Scope.GLOBAL, var.type, dimSize)
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(tVarName.top())
+        if var is None:
+            var = varsGlobal.find(tVarName.top())
+        dimSize = var.size() - 1
+        if dimSize > 0:
+            addressManager.nextAddress(Scope.LOCAL, var.type, dimSize)
 
 
 # =================================
@@ -405,13 +451,13 @@ def p_addOperandId(p):
     if scope == Scope.GLOBAL:
         var = varsGlobal.find(tVarName.top())
         if var is None:
-            print(tVarName.top(), "is not a global variable!")
+            print("ERROR ::", tVarName.top(), "is not a global variable!")
     elif scope == Scope.LOCAL:
         var = varsLocal.find(tVarName.top())
         if var is None:
             var = varsGlobal.find(tVarName.top())
         if var is None:
-            print(tVarName.top(), "is not a local or global variable!")
+            print("ERROR ::", tVarName.top(), "is not a local or global variable!")
     operandStack.push(var.address)
     typeStack.push(tVarType.top())
 
@@ -446,7 +492,7 @@ def p_lookupID(p):
             var = varsGlobal.find(operandID)
     
     if var is None:
-        print("Error: Variable not found!")
+        print("ERROR :: Variable not found!")
         return
     else:
         tVarName.push(var.name)
@@ -498,7 +544,7 @@ def p_minusQuadruple(p):
     rightOperand = operandStack.pop()
     type = typeStack.pop()
     if type is Type.STRING or type is Type.CHAR or type is Type.BOOL:
-        print("Can't negate expression.")
+        print("ERROR :: Can't negate expression.")
         return
     # TODO: addCte(-1) lookup constant in constant table
     # get symbol
@@ -531,7 +577,7 @@ def p_addAssignQuadruple(p):
     if resultType is not None:
         quadruples.push(Quadruple(operator, rightOperand, None, leftOperand))
     else:
-        print("Error: Result type mismatch")
+        print("ERROR :: Result type mismatch")
         return
 
 def p_addPrintQuadruple(p):
@@ -562,7 +608,7 @@ def p_tryIfCondition(p):
     expResult = operandStack.pop() 
     expType = typeStack.pop()
     if expType != Type.BOOL:
-        print("Error: Result type mismatch")
+        print("ERROR :: Result type mismatch")
         return
     else:
         quadruples.push(Quadruple("GOTOF", expResult, None, -1))
@@ -677,7 +723,7 @@ def p_lookupFunc(p):
     funcId = p[-1]
     function = dirFuncs.find(funcId)
     if function is None:
-        raise Exception("Function error: function not found")
+        raise Exception("ERROR :: Function not found")
     else:
         tFuncCallName.push(function.name)
         tFuncCallType.push(function.type)
@@ -696,7 +742,7 @@ def p_setReturn(p):
     outputType  = typeStack.pop()
     func = dirFuncs.find(tFuncName)
     if outputType != func.type:
-        raise Exception("RETURN TYPE EXPECTED", func.type, "INSTEAD GOT", outputType)
+        raise Exception("ERROR :: Return type expected ", func.type, " instead got ", outputType)
 
     quadruples.push(Quadruple("RETURN", None, None, output))
     #TODO keep it ? addressManager.resetAddresses()
@@ -714,13 +760,13 @@ def p_addArgument(p):
         quadruples.push(quadruple)
         tFuncCallArgs.push(args + 1)
     else:
-        raise Exception("Function error: parameter type mismatch")
+        raise Exception("ERROR :: Function parameter type mismatch")
 
 def p_verifyArguments(p):
     'verifyArguments :'
     function = dirFuncs.find(tFuncCallName.top())
     if len(function.parameters) != tFuncCallArgs.top():
-        raise Exception("Function error: incorrect number of arguments, found", tFuncCallArgs.top(), "should be", len(function.parameters))
+        raise Exception("ERROR :: incorrect number of arguments in function, found", tFuncCallArgs.top(), "should be", len(function.parameters))
 
 def p_generateGoSub(p):
     'generateGoSub :'
@@ -742,7 +788,7 @@ def p_generateGoSub(p):
             quadruple = Quadruple('GOSUB', function.name, None, None)
             quadruples.push(quadruple)
     else:
-        raise Exception("Function error: function not found")
+        raise Exception("ERROR :: Function not found")
     tFuncCallType.pop()
     tFuncCallName.pop()
     tFuncCallArgs.pop()

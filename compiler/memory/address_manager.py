@@ -42,7 +42,7 @@ class AddressManager:
             
             return address
         except Exception as e:
-            raise("ERROR: When trying to generate a new address the following problem was found:", e)
+            raise("ERROR :: When trying to generate a new address the following problem was found:", e)
     
     def resetAddresses(self):
         for idx, type in enumerate(Type):

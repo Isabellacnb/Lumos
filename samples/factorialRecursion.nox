@@ -19,14 +19,14 @@ main {
     read(number);
 
     !! - Check number is positive
-    if (n < 0) {
+    if (number < 0) {
 
-        print("Can't calculate factorial of a negative number!");
+        println("Can't calculate factorial of a negative number!");
 
     } else {
 
         !! - Call factorial function and print result
-        print("Factorial of ", number, " = ", factorial(number));
+        println("Factorial of ", number, " = ", factorial(number));
 
     }
 }

@@ -127,7 +127,6 @@ def p_mult_dim(p):
 def p_stmt(p):
     '''stmt : if
             | while
-            | loop
             | stmt_endl ";"'''
 
 # Rule to define whether line will assign, write, return, call function or read
@@ -302,15 +301,12 @@ def p_call_mult_params(p):
 
 # Conditionals and cycles
 # =============================
-# Rule to call loop
-def p_loop(p):
-    '''loop : FOR "(" assign ";" super_expression ")" section'''
 
 # Rule to call decision
 def p_if(p):
     '''if : IF "(" super_expression ")" tryIfCondition section if_else endIfCondition'''
 
-# TODO: will we have a else-if?
+# TODO: will we have an else-if?
 # Rule to call else
 def p_if_else(p):
     '''if_else : ELSE tryElseCondition section
@@ -384,7 +380,9 @@ def createVariable(name, type):
 def createConstant(constValue):
     global constantTable
     if not constantTable.find(constValue):
-        if type(constValue) == int:
+        if type(constValue) == bool:
+            constType = Type.BOOL
+        elif type(constValue) == int:
             constType = Type.INT
         elif type(constValue) == float:
             constType = Type.FLOAT
@@ -641,7 +639,9 @@ def p_addParameter(p):
     varName = p[-1]
     varType = p[-2]
     createVariable(varName, varType)
-    tFuncParameters.append(varType)
+    
+    paramVar = varsLocal.find(varName)
+    tFuncParameters.append(paramVar)
 
 def p_addFunction(p):
     'addFunction :'
@@ -650,9 +650,8 @@ def p_addFunction(p):
 
 def p_endFunction(p):
     'endFunction :'
-    global tFuncParameters, tFuncName
-    
-    # TODO: set memory limits
+    global tFuncParameters, tFuncName, dirFuncs
+
     memoryLimits = addressManager.getLimits()
     currFunc = dirFuncs.find(tFuncName)
     currFunc.limits = memoryLimits
@@ -700,7 +699,7 @@ def p_setReturn(p):
         raise Exception("RETURN TYPE EXPECTED", func.type, "INSTEAD GOT", outputType)
 
     quadruples.push(Quadruple("RETURN", None, None, output))
-    addressManager.resetAddresses()
+    #TODO keep it ? addressManager.resetAddresses()
 
 def p_addArgument(p):
     'addArgument :'
@@ -708,8 +707,8 @@ def p_addArgument(p):
     argument = operandStack.pop()
     argumentType = typeStack.pop()
     function = dirFuncs.find(tFuncCallName.top())
-    param = function.parameters[tFuncCallArgs.top()]
-    if argumentType == param:
+    paramType = function.parameters[tFuncCallArgs.top()].type
+    if argumentType == paramType:
         args = tFuncCallArgs.pop()
         quadruple = Quadruple('PARAM', argument, None, args)
         quadruples.push(quadruple)
@@ -795,10 +794,13 @@ def generateObjectFile():
             file.write("\n")
 
 def serializeFunction(func:Function):
-    # name|returnType|paramTypeArray|quadPosition|localLimitsArray|tempLimitsArray
+    # name|returnType|{paramName!paramType!paramAddress}|quadPosition|localLimitsArray|tempLimitsArray
     output = str(func.name) + "|"
     output += str(func.type.value) + "|"
-    output += str(list(map(lambda x: x.value, func.parameters))) + "|"
+    for paramVar in func.parameters:
+        output += paramVar.name + "!" + str(paramVar.type.value) + "!" + str(paramVar.address) + "#"
+    output = output[:-1]
+    output += "|"
     output += str(func.quadruplePosition) + "|"
     output += str(list(func.limits[0].values())) + "|"
     output += str(list(func.limits[1].values()))
@@ -864,7 +866,7 @@ if __name__ == '__main__':
 
     try:
         # TODO: remove hard coded file
-        f = open("../samples/demofilesimple.nox", "r")
+        f = open("../samples/factorialRecursion.nox", "r")
         file = f.read()
         f.close()
     except EOFError:

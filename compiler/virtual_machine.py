@@ -75,14 +75,20 @@ class VirtualMachine:
                     self.assignDict(memoryScope, memoryDict)
 
                 elif phase == Phase.FUNCDIR:
-                    # name|returnType|paramTypeArray|quadPosition|localLimitsArray|tempLimitsArray
+                    # name|returnType|{paramName!paramType!paramAddress#}|quadPosition|localLimitsArray|tempLimitsArray
                     funcElements = line.split('|')
                     funcName = funcElements[0]
                     funcType = Type(int(funcElements[1]))
-                    params = funcElements[2][1:-1].split(',')
-                    funcParams = list(map(lambda x: Type(int(x)), params))
-                    funcPos = int(funcElements[3])
                     
+                    funcParams = []
+                    params = funcElements[2].split('#')
+                    for param in params:
+                        paramElements = param.split("!")
+                        paramVar = Variable(paramElements[0], Type(int(paramElements[1])))
+                        paramVar.address = int(paramElements[2])
+                        funcParams.append(paramVar)
+                    
+                    funcPos = int(funcElements[3])
                     localLimits = funcElements[4][1:-1].split(',')
                     funcLocalLimits = list(map(lambda x: int(x), localLimits))
                     localLimits = self.limitsToDict(funcLocalLimits)
@@ -137,9 +143,9 @@ class VirtualMachine:
             return value[1:-1]
         elif "." in value:
             return float(value)
-        elif "true" in value:
+        elif "True" in value:
             return True
-        elif "false" in value:
+        elif "False" in value:
             return False
         else:
             return int(value)
@@ -180,14 +186,15 @@ class VirtualMachine:
             elif operation == "GOSUB":
                 logging.debug("GOSUB executed")
                 func = self.funcDir.find(quad.operLeft)
-                if len(func.parameters) != len(self.memoryManager.callStack.top().parameters):
-                    print("ERROR :: Incorrect number of arguments given when calling", func.name, ", expected", len(func.paramters), "got", len(self.memoryManager.callStack.top().parameters))
-                    exit()
+                #TODO check if necessary
+                # if len(func.parameters) != len(self.memoryManager.callStack.top().parameters):
+                #     print("ERROR :: Incorrect number of arguments given when calling", func.name, ", expected", len(func.paramters), "got", len(self.memoryManager.callStack.top().parameters))
+                #     exit()
                 
                 if quad.result != "None":
                     self.memoryManager.callStack.top().returnAddress = int(quad.result)
                 
-                self.memoryManager.callStack.top().callbackPos = inst_ptr + 1
+                self.memoryManager.callStack.top().callbackPosition = inst_ptr + 1
 
                 inst_ptr = func.quadruplePosition
                 continue
@@ -201,14 +208,20 @@ class VirtualMachine:
             
             elif operation == "PARAM":
                 logging.debug("PARAM executed")
-                paramType = self.memoryManager.getTypeOf(int(quad.operLeft), Scope.LOCAL)
+                func = self.funcDir.find(self.currFuncCall)
                 paramInd = int(quad.result)
 
-                func = self.funcDir.find(self.currFuncCall)
-                if func.parameters[paramInd] != paramType:
-                    print("ERROR :: Type mismatch when calling", func.name, "expected", func.parameters[paramInd].name, "got", paramType.name)
+                act_record = self.memoryManager.callStack.pop()
+                paramValue = self.memoryManager.get(quad.operLeft)
+                paramScope = self.memoryManager.getScopeOf(int(quad.operLeft))
+                paramType = self.memoryManager.getTypeOf(int(quad.operLeft), paramScope)
+                self.memoryManager.callStack.push(act_record)
+
+                if func.parameters[paramInd].type != paramType:
+                    print("ERROR :: Type mismatch when calling", func.name, "expected", func.parameters[paramInd].type, "got", paramType.name)
                     exit()
-                self.memoryManager.callStack.top().parameters.append(paramType)
+
+                self.memoryManager.set(func.parameters[paramInd].address, paramValue)
 
             elif operation == "ENDFUNC":
                 logging.debug("ENDFUNC executed")
@@ -223,6 +236,8 @@ class VirtualMachine:
                 self.memoryManager.set(returnAddress, value)
                 
                 inst_ptr = self.memoryManager.callStack.top().callbackPosition
+
+                self.memoryManager.callStack.pop()
                 continue
 
             elif operation == "PRINT":
@@ -236,8 +251,8 @@ class VirtualMachine:
 
             elif operation == "READ":
                 logging.debug("READ executed")
-                input = input()
-                self.memoryManager.set(quad.result, input)
+                readValue = input()
+                self.memoryManager.set(quad.result, readValue)
 
             elif operation == "=":
                 logging.debug("ASSIGN executed")
@@ -272,6 +287,9 @@ class VirtualMachine:
             self.memoryManager.set(quad.result, left * right)
         elif operation == "/":
             logging.debug("DIV executed")
+            if right == 0:
+                print("ERROR :: Division by zero")
+                exit()
             self.memoryManager.set(quad.result, left / right)
         elif operation == ">":
             logging.debug("MORETHAN executed")

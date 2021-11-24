@@ -3,11 +3,17 @@ vars
 int i , j;
 bool check;
 
-task max(int a , int b) : int {
+task max(int a , int b) : bool {
+    vars
+    int x;
+    bool flag;
+
     if (a > b) {
-        return a;
+        flag = true;
+        return flag;
     } else {
-        return b;
+        flag = false;
+        return flag;
     }
 }
 

@@ -31,7 +31,6 @@ reserved = {
     'else' : 'ELSE',
 
     # Cycle tokens
-    'for' : 'FOR',
     'while' : 'WHILE',
 
     # Primitive types

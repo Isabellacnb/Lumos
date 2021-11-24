@@ -52,8 +52,8 @@ class AddressManager:
             self.tempAddresses[type] = self.size * 2 + idx * self.typeRange
     
     def getLimits(self):
-        local = self.localAddresses
-        temp = self.tempAddresses
+        local = self.localAddresses.copy()
+        temp = self.tempAddresses.copy()
         return (local, temp)
         
 

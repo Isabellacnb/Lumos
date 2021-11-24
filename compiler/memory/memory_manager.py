@@ -12,6 +12,7 @@ class MemoryManager:
 
         # Activation Record
         self.callStack = Stack()
+        self.exeStack = Stack()
         self.callStack.push(ActivationRecord((self.localAddresses, self.tempAddresses)))
 
         # Create arrays with the n number of addresses used

@@ -994,6 +994,14 @@ def serializeMemory(scopeInd:int):
 if __name__ == '__main__':
 
     try:
+        print("""
+    __                              
+   / /   __  ______ ___  ____  _____
+  / /   / / / / __ `__ \/ __ \/ ___/
+ / /___/ /_/ / / / / / / /_/ (__  ) 
+/_____/\__,_/_/ /_/ /_/\____/____/  
+                                    
+""")
         # TODO: remove hard coded file
         file_name = input('Enter file name:')
         f = open(file_name, "r")

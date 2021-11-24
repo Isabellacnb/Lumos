@@ -4,23 +4,27 @@ lumos fibonacci;
 
 main {
     vars
-    int a, b, next, number;
+    int a, b, next, number, i;
 
     a = 0;
     b = 1;
+
+    i = 0;
 
     print("Enter number of terms: ");
     read(number);
 
     !! - Print first two numbers
-    print("Fibonacci: ", a, ", ", b);
-    next = a + b;
-    while (next <= number) {
-        print(", ", next);
+    print("Fibonacci: ");
+    next = a;
+    while (i < number) {
+        print(next, " ");
         a = b;
         b = next;
         next = a + b;
+        i = i + 1;
     }
+    println(" ");
 }
 
 nox;

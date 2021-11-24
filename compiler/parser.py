@@ -912,7 +912,7 @@ if __name__ == '__main__':
 
     try:
         # TODO: remove hard coded file
-        f = open("../samples/factorialRecursion.nox", "r")
+        f = open("../samples/fibonacci.nox", "r")
         file = f.read()
         f.close()
     except EOFError:

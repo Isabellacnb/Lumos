@@ -172,7 +172,7 @@ class VirtualMachine:
             operation = quad.operator
 
             # Arithmetic operations
-            if operation in ["+", "-", "*", "/", ">", "<", ">=", "<=", "<>", "==", "and", "or"]:
+            if operation in ["+", "-", "*", "/", "%", ">", "<", ">=", "<=", "<>", "==", "and", "or"]:
                 self.arithmeticOperations(quad)
 
             elif operation == "GOTO":
@@ -299,6 +299,9 @@ class VirtualMachine:
                 print("ERROR :: Division by zero")
                 exit()
             self.memoryManager.set(quad.result, left / right)
+        elif operation == "%":
+            logging.debug("RESIDUE executed")
+            self.memoryManager.set(quad.result, left % right)
         elif operation == ">":
             logging.debug("MORETHAN executed")
             self.memoryManager.set(quad.result, left > right)

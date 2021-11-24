@@ -995,7 +995,9 @@ if __name__ == '__main__':
 
     try:
         # TODO: remove hard coded file
-        f = open("../samples/sort.nox", "r")
+        file_name = input('Enter file name:')
+        f = open(file_name, "r")
+        #f = open("../samples/sort.nox", "r")
         file = f.read()
         f.close()
     except EOFError:

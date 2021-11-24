@@ -1,0 +1,24 @@
+lumos array;
+vars
+int arr[5];
+
+main {
+    vars
+    int size, i;
+
+    size = 5;
+    i = 0;
+
+    while (i < 5) {
+        arr[i] = size - i;
+        i = i + 1;
+    }
+    i = 0;
+    while (i < 5) {
+        print(arr[i], " ");
+        i = i + 1;
+    }
+    println(" ");
+}
+
+nox;

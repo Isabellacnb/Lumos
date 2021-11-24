@@ -25,6 +25,7 @@ jumpStack = Stack()
 # Temporary Var data
 tVarName = Stack()
 tVarType = Stack()
+tVarDim = Stack()
 # Temporary Function data
 tFuncName = ""
 tFuncType = ""
@@ -112,9 +113,6 @@ def p_var_array(p):
     '''var_array : array_dim initArrayDim
                 | empty'''
 
-# TODO: arrays (check if [exp] is calling correct rule)
-# Arrays
-# ----------------------------
 def p_array_dim(p):
     '''array_dim : "[" CTE_INT addDim "]" mult_dim'''
 
@@ -122,15 +120,14 @@ def p_mult_dim(p):
     '''mult_dim : array_dim 
                 | empty'''
 
-# Rule to assign value to a variable
 def p_arr_assign(p):
     '''arr_assign : ID lookupID array_dim_index "=" addOperator super_expression addAssignQuadruple'''
 
 def p_array_dim_index(p):
-    '''array_dim_index : setVarDim "[" addFakeBottom exp delFakeBottom "]" mult_dim_index'''
+    '''array_dim_index : setVarDim "[" addFakeBottom exp delFakeBottom generateVerQuad "]" mult_dim_index addBaseAddress delVarName delVarType delVarDim'''
 
 def p_mult_dim_index(p):
-    '''mult_dim_index : "[" exp "]" mult_dim_index
+    '''mult_dim_index : dimensionOffset "[" addFakeBottom exp delFakeBottom generateVerQuad "]" displacementUpdate mult_dim_index
                 | empty'''
 
 # Statements
@@ -222,7 +219,7 @@ def p_value(p):
     '''value : cte addCte addOperandCte
             | call_func
             | ID lookupID addOperandId delVarName delVarType 
-            | ID id_dim'''
+            | ID lookupID id_dim'''
 
 # Constants
 # =============================
@@ -240,7 +237,7 @@ def p_cte_char(p):
 
 # TODO: related to arrays
 def p_id_dim(p):
-    '''id_dim : array_dim'''
+    '''id_dim : array_dim_index'''
 
 def p_cte_int(p):
     "cte : CTE_INT"
@@ -392,7 +389,7 @@ def createVariable(name, type):
 
 def createConstant(constValue):
     global constantTable
-    if not constantTable.find(constValue):
+    if not constantTable.find(str(constValue)):
         if type(constValue) == bool:
             constType = Type.BOOL
         elif type(constValue) == int:
@@ -404,7 +401,7 @@ def createConstant(constValue):
         elif type(constValue) == str:
             constType = Type.STRING
         address = addressManager.nextAddress(Scope.CONSTANT, constType)
-        const = Constant(address, constValue, constType, constValue)
+        const = Constant(address, str(constValue), constType, constValue)
         constantTable.insert(const)
 
 # =================================
@@ -413,7 +410,7 @@ def createConstant(constValue):
 
 def p_addDim(p):
     'addDim :'
-    dimSize = p[-1]
+    dimSize = int(p[-1])
     if scope == Scope.GLOBAL:
         var = varsGlobal.find(tVarName.top())
         var.pushDimension(dimSize)
@@ -427,7 +424,7 @@ def p_addDim(p):
         var.pushDimension(dimSize)
 
 def p_initArrayDim(p):
-    'p_initArrayDim :'
+    'initArrayDim :'
     if scope == Scope.GLOBAL:
         var = varsGlobal.find(tVarName.top())
         dimSize = var.size() - 1
@@ -440,6 +437,92 @@ def p_initArrayDim(p):
         dimSize = var.size() - 1
         if dimSize > 0:
             addressManager.nextAddress(Scope.LOCAL, var.type, dimSize)
+
+def p_setVarDim(p):
+    'setVarDim :'
+    global tVarDim
+    tVarDim.push(0)
+
+def p_delVarDim(p):
+    'delVarDim :'
+    global tVarDim
+    tVarDim.pop()
+
+def p_generateVerQuad(p):
+    'generateVerQuad :'
+    global tVarDim, operandStack, quadruples
+    dim = tVarDim.pop()
+    index = operandStack.top()
+    if typeStack.top() is Type.INT:
+        if scope == Scope.GLOBAL:
+            var = varsGlobal.find(tVarName.top())
+        elif scope == Scope.LOCAL:
+            var = varsLocal.find(tVarName.top())
+            if var is None:
+                var = varsGlobal.find(tVarName.top())
+        if dim < len(var.dimensions):
+            quad = Quadruple("VERIFY", index, 0, var.dimensions[dim])
+            quadruples.push(quad)
+            tVarDim.push(dim + 1)
+        else:
+            print("ERROR :: Array dimension is not valid")
+            exit()
+    else:
+        print("ERROR :: Array index should be integer")
+        exit()
+
+def p_dimensionOffset(p):
+    'dimensionOffset :'
+    global tVarDim, quadruples, operandStack, typeStack
+    dim = tVarDim.pop() - 1
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(tVarName.top())
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(tVarName.top())
+        if var is None:
+            var = varsGlobal.find(tVarName.top())
+    left = operandStack.pop()
+    leftType = typeStack.pop()
+    dimLimit = var.dimensions[dim]
+    createConstant(dimLimit)
+    cte = constantTable.find(str(dimLimit))
+
+    address = addressManager.nextAddress(scope, Type.INT)
+    quad = Quadruple("*", left, cte.address, address)
+    quadruples.push(quad)
+    operandStack.push(address)
+    typeStack.push(leftType)
+    tVarDim.push(dim + 1)
+
+def p_displacementUpdate(p):
+    'displacementUpdate :'
+    global quadruples, operandStack, typeStack
+    right = operandStack.pop()
+    typeStack.pop()
+    left = operandStack.pop()
+    typeStack.pop()
+    address = addressManager.nextAddress(scope, Type.INT)
+    quad = Quadruple("+", left, right, address)
+    quadruples.push(quad)
+    operandStack.push(address)
+    typeStack.push(Type.INT)
+
+def p_addBaseAddress(p):
+    'addBaseAddress :'
+    global operandStack, typeStack, quadruples
+    left = operandStack.pop()
+    typeStack.pop()
+    if scope == Scope.GLOBAL:
+        var = varsGlobal.find(tVarName.top())
+    elif scope == Scope.LOCAL:
+        var = varsLocal.find(tVarName.top())
+        if var is None:
+            var = varsGlobal.find(tVarName.top())
+    address = '(' + str(addressManager.nextAddress(scope, Type.INT)) + ')'
+    quad = Quadruple("BASE", left, var.address, address)
+    quadruples.push(quad)
+    operandStack.push(address)
+    typeStack.push(var.type)
 
 
 # =================================
@@ -472,7 +555,7 @@ def p_addOperandCte(p):
     'addOperandCte :'
     global operandStack, typeStack
     constantName = p[-2]
-    cte = constantTable.find(constantName)
+    cte = constantTable.find(str(constantName))
     operandStack.push(cte.address)
     typeStack.push(cte.type)
 
@@ -492,8 +575,8 @@ def p_lookupID(p):
             var = varsGlobal.find(operandID)
     
     if var is None:
-        print("ERROR :: Variable not found!")
-        return
+        print("ERROR :: Variable", operandID, "not found!")
+        exit()
     else:
         tVarName.push(var.name)
         tVarType.push(var.type)
@@ -578,7 +661,7 @@ def p_addAssignQuadruple(p):
         quadruples.push(Quadruple(operator, rightOperand, None, leftOperand))
     else:
         print("ERROR :: Result type mismatch")
-        return
+        exit()
 
 def p_addPrintQuadruple(p):
     'addPrintQuadruple :'
@@ -912,7 +995,7 @@ if __name__ == '__main__':
 
     try:
         # TODO: remove hard coded file
-        f = open("../samples/fibonacci.nox", "r")
+        f = open("../samples/sort.nox", "r")
         file = f.read()
         f.close()
     except EOFError:

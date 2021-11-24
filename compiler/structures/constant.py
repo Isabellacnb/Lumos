@@ -11,6 +11,7 @@ class Constant:
         self.type = type
         self.value = value
     
+    #TODO: can we delete?
     def address(self):
         return self.address
     

@@ -1,17 +1,20 @@
 lumos bubbleSort;
+vars
+int arr[5];
 
 !! - Function to display arrays
-task display(int arr[], int size) : void {
+task display(int size) : void {
     vars
     int i;
     
     i = 0;
     while (i < size) {
         print(arr[i], " ");
+        i = i + 1;
     }
 }
 
-task sort(int arr[], int size) : void {
+task sort(int size) : void {
     vars
     int i, tmp;
     bool swapped;
@@ -30,7 +33,7 @@ task sort(int arr[], int size) : void {
             !! - Compare values
             if (arr[i] > arr[i + 1]) {
                 tmp = arr[i];
-                arr[i] = arr[i + 1];
+                arr[i] = arr[i + 1]
                 arr[i + 1] = tmp;
                 swapped = true;
             }
@@ -40,23 +43,23 @@ task sort(int arr[], int size) : void {
         }
     }
     print("Sorted: ");
-    display(arr, size);
+    display(size);
 }
 
 main {
     vars
-    int size = 5, i;
-    int arr[size];
+    int size, i;
 
     i = 0;
+    size = 5;
 
     while (i < 5) {
         arr[i] = size - i;
         i = i + 1;
     }
     print("Not sorted: ");
-    display(arr, size);
-    sort(arr, size);
+    display(size);
+    sort(size);
 }
 
 nox;

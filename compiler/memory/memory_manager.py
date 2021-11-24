@@ -30,6 +30,9 @@ class MemoryManager:
             self.cteMemory[type] = (self.cteAddresses[type] % self.baseSize) * [None]
     
     def get(self, address):
+        if "(" in str(address):
+            ptrAddress = self.get(address[1:-1])
+            return self.get(ptrAddress)
         address = int(address) # safe check
 
         addressScope = self.getScopeOf(address)
@@ -45,6 +48,10 @@ class MemoryManager:
             return self.executeStack.top().get(addressScope, address, addressType)
 
     def set(self, address, value):
+        if "(" in str(address):
+            ptrAddress = self.get(int(address[1:-1]))
+            self.set(ptrAddress, value)
+            return
         address = int(address) # safe check
 
         addressScope = self.getScopeOf(address)

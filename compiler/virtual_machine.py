@@ -259,9 +259,22 @@ class VirtualMachine:
                 value = self.memoryManager.get(quad.operLeft)
                 self.memoryManager.set(quad.result, value)
             
+            elif operation == "BASE":
+                base = int(quad.operRight)
+                left = self.memoryManager.get(quad.operLeft)
+                target = quad.result[1:-1] # convert pointer to address
+                self.memoryManager.set(target, left + base)
+            
+            elif operation == "VERIFY":
+                index = self.memoryManager.get(quad.operLeft)
+                dim = int(quad.result)
+                if index < 0 or index >= dim:
+                    print("ERROR :: Index is out of range")
+                    exit()
+
             elif operation == "END":
                 logging.debug("END executed")
-                print("Mischief managed")
+                print("\n✨Mischief managed✨")
                 return
             
             inst_ptr += 1

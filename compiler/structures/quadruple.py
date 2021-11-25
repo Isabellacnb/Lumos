@@ -1,3 +1,11 @@
+# ------------ quadruple.py ------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Quadruple
+# Structure that represents a quadruple
+# operator - leftOperand - rightOperand - result
+# --------------------------------------------------
+
 class Quadruple():
     def __init__(self, operator, operLeft, operRight, result):
         self.operator = operator

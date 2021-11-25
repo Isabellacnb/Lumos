@@ -1,8 +1,9 @@
-# ------------ function_directory.py ------------
+# ------------ function.py ------------
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Function
-# -----------------------------------------------
+# Object that represents a function
+# --------------------------------------------------
 
 class Function:
     def __init__(self, name, type, parameters, quadruplePosition, memoryLimits):

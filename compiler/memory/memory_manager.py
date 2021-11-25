@@ -1,3 +1,13 @@
+# -------------- memory_manager.py --------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Memory Manager
+# Object that represents a memory manager. A 
+# memory manager is used during the execution phase 
+# to represent the memory while considering the 
+# current context using activation records.
+# --------------------------------------------------
+
 from structures import *
 from .activation_record import ActivationRecord
 

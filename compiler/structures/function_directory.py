@@ -2,7 +2,13 @@
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Function Directory
-# -----------------------------------------------
+# Object that represents a function directory, which
+# is used to store the functions contained in a
+# program. It verifies whether a function is already
+# declared before inserting it, as well as finding
+# and returing a specific function based on the name
+# given.
+# --------------------------------------------------
 
 class FunctionDirectory:
     def __init__(self):
@@ -16,7 +22,8 @@ class FunctionDirectory:
 
     def insert(self, function):
         if self.find(function) is not None:
-            print("Invalid function: '", function.name, " is already declared.")
+            print("ERROR :: Invalid function: '", function.name, " is already declared.")
+            exit()
         else:
             self.functions[function.name] = function
             return self.functions[function.name]

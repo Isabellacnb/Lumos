@@ -1,4 +1,14 @@
-# Structures
+# -------------- address_manager.py --------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Address Manager
+# Object that represents an address manager. An 
+# address manager is used during the compilation 
+# phase for generating addresses based on type, 
+# scope and size of variables, as well as providing 
+# memory limits for each scope addresses.
+# --------------------------------------------------
+
 from structures import *
 
 class AddressManager:
@@ -19,13 +29,8 @@ class AddressManager:
             self.localAddresses[type] = self.size * 1 + idx * self.typeRange
             self.tempAddresses[type] = self.size * 2 + idx * self.typeRange
             self.cteAddresses[type] = self.size * 3 + idx * self.typeRange
-            # print("GLOBAL", type, "START", self.globalAddresses[type])
-            # print("LOCAL", type, "START", self.localAddresses[type])
-            # print("TEMP", type, "START", self.tempAddresses[type])
-            # print("CTE", type, "START", self.cteAddresses[type])
 
     def nextAddress(self, scope, type, size=1):
-        #TODO: Check next address is not out of bounds
         try:
             if (scope == Scope.GLOBAL):
                 address = self.globalAddresses[type]

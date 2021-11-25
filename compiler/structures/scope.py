@@ -1,3 +1,9 @@
+# ------------ scope.py ------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Scope
+# Class to declare compiler scopes
+# --------------------------------------------------
 
 from enum import Enum
 

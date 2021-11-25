@@ -2,7 +2,14 @@
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Variable Table
-# -----------------------------------------------
+# Object that represents a variable table, which
+# is used to store the variables generated 
+# throughout our compiler allowing methods of search 
+# and inserting. It verifies whether a variable is 
+# already declared before inserting it, as well as 
+# finding and returing a specific variable based on 
+# the given name.
+# --------------------------------------------------
 
 class VariableTable:
     def __init__(self):

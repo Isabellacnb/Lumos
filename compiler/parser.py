@@ -1,8 +1,13 @@
 # -------------- parser.py --------------
 # -- Rodrigo Bilbao -- Isabella Canales --
-# 
+#
 # -- Lumos : Parser
-# ----------------------------------------
+# The parser provides the semantical rules and actions, 
+# as well as the code and quadruple generation. It 
+# produces an intermediate code to be processed by 
+# the LVM
+# --------------------------------------------------
+
 title = """
     __                              
    / /   __  ______ ___  ____  _____
@@ -104,7 +109,6 @@ def p_vars_mult_lines(p):
                     | empty'''
 
 # Rule to define variable names
-# TODO: array dimensions
 def p_var_list(p):
     '''var_list : ID saveVarName storeVar var_array delVarName var_comma'''
 
@@ -158,9 +162,7 @@ def p_stmt_endl(p):
 def p_return(p):
     '''return : RETURN super_expression setReturn'''
 
-# TODO: CHECK
-# TODO: INPUT WITH INDEX SELECTOR
-# Rule to raed
+# Rule to read
 def p_read(p):
     '''read : READ "(" ID lookupID addOperandId delVarName delVarType ")" addReadQuadruple 
             | READ "(" ID lookupID addOperandId array_dim_index ")" addReadQuadruple'''
@@ -220,8 +222,6 @@ def p_factor(p):
     '''factor : '(' addFakeBottom super_expression delFakeBottom ')'
                 | value'''
 
-# TODO: ID with index selector
-# TODO: call_func and ID
 # Rule to define value
 def p_value(p):
     '''value : cte addCte addOperandCte
@@ -319,7 +319,6 @@ def p_call_mult_params(p):
 def p_if(p):
     '''if : IF "(" super_expression ")" tryIfCondition section if_else endIfCondition'''
 
-# TODO: will we have an else-if?
 # Rule to call else
 def p_if_else(p):
     '''if_else : ELSE tryElseCondition section
@@ -553,7 +552,6 @@ def p_addCte(p):
     createConstant(cte)
 
 
-# TODO: pushConstantOperand --> needs a constant table to push constant adress to operandStack
 def p_addOperandCte(p):
     'addOperandCte :'
     global operandStack, typeStack
@@ -583,7 +581,6 @@ def p_lookupID(p):
     else:
         tVarName.push(var.name)
         tVarType.push(var.type)
-        #TODO: delete print("Found: " + str(var))
 
 def generateQuadrupleExpression(operators):
     global operandStack, operatorStack, typeStack, quadruples
@@ -603,10 +600,8 @@ def generateQuadrupleExpression(operators):
         operandStack.push(tmpAddress)
         typeStack.push(resultType)
 
-        # TODO: Check if global or local temporary variable (maybe not necessary since we don't distinguish global and local temporary variables)
         quadruple = Quadruple(operator, operLeft, operRight, tmpAddress)
         quadruples.push(quadruple)
-        #print(str(quadruple) + " " + str(resultType))
 
 def p_logicalQuadruple(p):
     'logicalQuadruple :'
@@ -635,7 +630,7 @@ def p_minusQuadruple(p):
     createConstant(-1)
     cte = constantTable.find("-1")
     resultType = getResultType(cte.type, "*", type)
-    address = addressManager.nextAddress(scope, Type.INT)
+    address = addressManager.nextAddress(scope, resultType)
     quad = Quadruple('*', cte.address, rightOperand, address)
     quadruples.push(quad)
     operandStack.push(address)
@@ -802,9 +797,7 @@ def p_endFunction(p):
 
 def createFunction(funcName, funcType, params, position):
     global dirFuncs
-    function = Function(funcName, funcType, params, position, None) #TODO added none to avoid error
-    # Insert function validates duplicate function declarations
-    # TODO: function is already declared try and catch
+    function = Function(funcName, funcType, params, position, None) # Memory limits added after parsing function
     dirFuncs.insert(function)
 
 def p_lookupFunc(p):
@@ -813,7 +806,8 @@ def p_lookupFunc(p):
     funcId = p[-1]
     function = dirFuncs.find(funcId)
     if function is None:
-        raise Exception("ERROR :: Function not found")
+        print("ERROR :: Function not found")
+        exit()
     else:
         tFuncCallName.push(function.name)
         tFuncCallType.push(function.type)
@@ -832,10 +826,9 @@ def p_setReturn(p):
     outputType  = typeStack.pop()
     func = dirFuncs.find(tFuncName)
     if outputType != func.type:
-        raise Exception("ERROR :: Return type expected ", func.type, " instead got ", outputType)
-
+        print("ERROR :: Return type expected ", func.type, " instead got ", outputType)
+        exit()
     quadruples.push(Quadruple("RETURN", None, None, output))
-    #TODO keep it ? addressManager.resetAddresses()
 
 def p_addArgument(p):
     'addArgument :'
@@ -850,13 +843,15 @@ def p_addArgument(p):
         quadruples.push(quadruple)
         tFuncCallArgs.push(args + 1)
     else:
-        raise Exception("ERROR :: Function parameter type mismatch")
+        print("ERROR :: Function parameter type mismatch")
+        exit()
 
 def p_verifyArguments(p):
     'verifyArguments :'
     function = dirFuncs.find(tFuncCallName.top())
     if len(function.parameters) != tFuncCallArgs.top():
-        raise Exception("ERROR :: incorrect number of arguments in function, found", tFuncCallArgs.top(), "should be", len(function.parameters))
+        print("ERROR :: incorrect number of arguments in function, found", tFuncCallArgs.top(), "should be", len(function.parameters))
+        exit()
 
 def p_generateGoSub(p):
     'generateGoSub :'
@@ -864,8 +859,6 @@ def p_generateGoSub(p):
     function = dirFuncs.find(tFuncCallName.top())
     if function is not None:
         if tFuncCallType.top() != Type.VOID and function.type != None:
-            # TODO: Generate temporary variable (check scope)
-            # TODO: Quadruple must have memory address
             var = Variable(function.name, function.type)
             var.address = addressManager.nextAddress(Scope.GLOBAL, tFuncType)
             varsGlobal.insert(var)
@@ -878,7 +871,8 @@ def p_generateGoSub(p):
             quadruple = Quadruple('GOSUB', function.name, None, None)
             quadruples.push(quadruple)
     else:
-        raise Exception("ERROR :: Function not found")
+        print("ERROR :: Function not found")
+        exit()
     tFuncCallType.pop()
     tFuncCallName.pop()
     tFuncCallArgs.pop()
@@ -944,7 +938,6 @@ def serializeFunction(func:Function):
     return output
 
 def serializeConstant(const:Constant):
-    #TODO: Confirm if constant need value
     # name|type|value|address
     output = str(const.name) + "|"
     output += str(const.type.value) + "|"

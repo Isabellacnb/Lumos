@@ -1,3 +1,14 @@
+# -------------- activation_record.py --------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Activation Record
+# Object that represents an activation record. An 
+# activation record is used during execution phase 
+# for the control and management of the local and 
+# temporary memory as well as callback functionality 
+# during task invoking. 
+# --------------------------------------------------
+
 from structures import *
 
 class ActivationRecord:

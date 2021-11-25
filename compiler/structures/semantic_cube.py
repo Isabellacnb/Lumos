@@ -1,9 +1,9 @@
-# -------------- semantic_cube.py --------------
+# ------------ semantic_cube.py ------------
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Semantic Cube
-# ----------------------------------------------
-
+# Object to validate compatibility in data types.
+# --------------------------------------------------
 
 from enum import Enum
 

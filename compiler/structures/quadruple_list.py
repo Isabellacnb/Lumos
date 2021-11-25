@@ -1,3 +1,13 @@
+# ------------ quadruple_list.py ------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Quadruple List
+# Object that represents a quadruple list, which
+# is used to store the quadruples. This provides a 
+# list of instructions later used on the execution 
+# phase.
+# --------------------------------------------------
+
 class QuadrupleList():
     def __init__(self):
         self.quads = []

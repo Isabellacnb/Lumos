@@ -1,13 +1,14 @@
 lumos DemoProgram;
 vars
-int i , j, x;
+int i , j;
 bool check;
 
-task max() : bool {
+task max(int a , int b) : bool {
     vars
+    int x;
     bool flag;
 
-    if (x > i) {
+    if (a > b) {
         flag = true;
         return flag;
     } else {
@@ -18,12 +19,13 @@ task max() : bool {
 
 main {
     vars
+    int x, i;
     string text;
     float y;
 
     x = 10;
     i = 12;
-    println(max());
+    println(max(x, i));
 }
 
 nox;

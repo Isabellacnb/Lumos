@@ -18,7 +18,7 @@ def runCode():
         msg.pack()
         return
     
-    command = f'python3 ../compiler/parser.py {gpath}'
+    command = f'python3 compiler/parser.py {gpath}'
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     parsedResult, error = process.communicate()
     
@@ -29,10 +29,10 @@ def runCode():
 
     # Get program name from output
     programName = str(parsedResult).split(' ', 4)[3]
-    print(f'python3 ../compiler/virtual_machine.py {programName}')
+    print(f'python3 compiler/virtual_machine.py {programName}')
 
     # Run virtual machine with object code .lumos
-    command = f'python3 ../compiler/virtual_machine.py {programName}'
+    command = f'python3 compiler/virtual_machine.py {programName}'
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     vmResult, error = process.communicate()
 

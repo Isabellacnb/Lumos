@@ -1,3 +1,12 @@
+# ------------ stack.py ------------
+# -- Rodrigo Bilbao -- Isabella Canales --
+# 
+# -- Lumos : Stack
+# A stack is a conceptual structure consisting of a 
+# set of homogeneous elements and is based on the 
+# principle of last in first out (LIFO).
+# --------------------------------------------------
+
 class Stack:
     def __init__(self):
         self.items = []

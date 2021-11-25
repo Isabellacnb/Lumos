@@ -1,8 +1,9 @@
-# -------------- variable_table.py --------------
+# -------------- constant.py --------------
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Constant
-# -----------------------------------------------
+# Object that represents a constant
+# --------------------------------------------------
 
 class Constant:
     def __init__(self, address, name, type, value):
@@ -10,10 +11,6 @@ class Constant:
         self.name = name
         self.type = type
         self.value = value
-    
-    #TODO: can we delete?
-    def address(self):
-        return self.address
     
     def __str__(self) -> str:
         return 'Constant: ' + str(self.name) + ', ' + str(self.type) + ', ' + str(self.address)

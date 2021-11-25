@@ -1,8 +1,9 @@
-# -------------- variable_table.py --------------
+# -------------- variable.py --------------
 # -- Rodrigo Bilbao -- Isabella Canales --
 # 
 # -- Lumos : Variable
-# -----------------------------------------------
+# Object that represents a variable
+# -----------------------------------------
 
 class Variable:
     def __init__(self, name, type):

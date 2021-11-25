@@ -1,8 +1,10 @@
 # -------------- scanner.py --------------
 # -- Rodrigo Bilbao -- Isabella Canales --
-# 
-# -- Lumos : Lexical Rules 
-# ----------------------------------------
+#
+# -- Lumos : Scanner
+# The scanner provides the lexical rules and tokens 
+# used throughout our lumos compiler.
+# --------------------------------------------------
 
 import ply.lex as lex
 

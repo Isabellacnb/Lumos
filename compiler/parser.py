@@ -3,7 +3,14 @@
 # 
 # -- Lumos : Parser
 # ----------------------------------------
-
+title = """
+    __                              
+   / /   __  ______ ___  ____  _____
+  / /   / / / / __ `__ \/ __ \/ ___/
+ / /___/ /_/ / / / / / / /_/ (__  ) 
+/_____/\__,_/_/ /_/ /_/\____/____/  
+"""
+import sys
 
 from memory.address_manager import AddressManager
 import scanner
@@ -644,6 +651,9 @@ def p_delFakeBottom(p):
     global operatorStack
     operatorStack.pop()
 
+# =================================
+# Statement Quadruple Rules #
+# =================================
 def p_addAssignQuadruple(p):
     'addAssignQuadruple :'
     global operatorStack, operandStack, typeStack, quadruples
@@ -992,30 +1002,24 @@ def serializeMemory(scopeInd:int):
 if __name__ == '__main__':
 
     try:
-        print("""
-    __                              
-   / /   __  ______ ___  ____  _____
-  / /   / / / / __ `__ \/ __ \/ ___/
- / /___/ /_/ / / / / / / /_/ (__  ) 
-/_____/\__,_/_/ /_/ /_/\____/____/  
-         """)
-        file_name = input('Enter file name: ')
+        # Check if file path is in args or if going to be given as input
+        if len(sys.argv) > 2:
+            print("ERROR :: Too many arguments given, check your command.")
+            exit()
+        elif 3 > len(sys.argv) >= 2:
+            file_name = sys.argv[1]
+        else:
+            print(title)
+            file_name = input('Enter file name: ')
         f = open(file_name, "r")
-        # TODO: remove hard coded file
-        #f = open("../samples/sort.nox", "r")
         file = f.read()
         f.close()
     except EOFError:
         quit()
     
-    #Parse the file using grammar
+    # Parse the file using grammar
     yacc.parse(file)
-    print("Sucessfully parsed...\n")
+    print("Sucessfully parsed into " + programName + ".lumos" + " ...\n")
     print("Quadruples generated: ")
     print(str(quadruples))
-    #print(str(dirFuncs))
     generateObjectFile()
-    # print("GLOBAL")
-    # print(str(varsGlobal))
-    # print("LOCAL")
-    # print(str(varsLocal))

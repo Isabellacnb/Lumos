@@ -16,6 +16,7 @@ from memory.memory_manager import MemoryManager
 
 from structures import *
 
+# Declare four phases provided in the intermediate code file
 class Phase(Enum):
     MEMORY = 0
     FUNCDIR = 1
@@ -55,6 +56,7 @@ class VirtualMachine:
 
             phase = Phase.FUNCDIR
 
+            # Run through intermediate code lines
             for line in lines:
                 # Check if we have reached new loading phase
                 if "@MEMORY" in line:
@@ -70,7 +72,7 @@ class VirtualMachine:
                     phase = Phase.QUADS
                     continue
 
-                # Based on phase, perform loading
+                # Based on phase, perform loading and assign corresponding information to be used in LVM
                 if phase == Phase.MEMORY:
                     # scope | bool | int | float | char | string
                     memoryElements = line.split('|')
@@ -131,9 +133,9 @@ class VirtualMachine:
 
         logging.debug("LOAD_FILE :: Successfully loaded", self.file_path)
         
-    # ============================
+    # ====================================
     # Helper functions to load object code
-    # ============================
+    # ====================================
     def limitsToDict(self, limits_array):
         limits_dict = {}
         for type in Type:
@@ -242,7 +244,6 @@ class VirtualMachine:
                 
                 self.memoryManager.executeStack.pop()
                 inst_ptr = act_record.callbackPosition
-
                 continue
 
             elif operation == "PRINT":
@@ -287,6 +288,7 @@ class VirtualMachine:
             
             inst_ptr += 1
             
+    # Executes arithmetic operations
     def arithmeticOperations(self, quad):
         operation = quad.operator
         left = self.memoryManager.get(quad.operLeft)

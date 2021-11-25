@@ -220,7 +220,7 @@ def p_value(p):
     '''value : cte addCte addOperandCte
             | call_func
             | ID lookupID addOperandId delVarName delVarType 
-            | ID lookupID id_dim'''
+            | ID lookupID array_dim_index'''
 
 # Constants
 # =============================
@@ -235,10 +235,6 @@ def p_cte_string(p):
 def p_cte_char(p):
     "cte : CTE_CHAR"
     p[0] = chr(p[1])
-
-# TODO: related to arrays
-def p_id_dim(p):
-    '''id_dim : array_dim_index'''
 
 def p_cte_int(p):
     "cte : CTE_INT"
@@ -265,7 +261,6 @@ def p_main(p):
     '''main : MAIN setScopeLocal section setScopeGlobal'''
 
 # Rule to write a function
-# TODO: falta addfunction despues de saveFunctionType
 def p_func(p):
     '''func : TASK setScopeLocal ID saveFunctionName "(" param ")" ":" type_func saveFunctionType addFunction section endFunction setScopeGlobal'''
 
@@ -287,7 +282,6 @@ def p_type_func(p):
     else:
         p[0] = p[1]
 
-# TODO: check for functions without parameters
 # Rule to define function parameter
 def p_param(p):
     '''param : type ID addParameter mult_params
@@ -999,11 +993,11 @@ if __name__ == '__main__':
 
     try:
         print("""
-            __                              
-           / /   __  ______ ___  ____  _____
-          / /   / / / / __ `__ \/ __ \/ ___/
-         / /___/ /_/ / / / / / / /_/ (__  ) 
-        /_____/\__,_/_/ /_/ /_/\____/____/  
+    __                              
+   / /   __  ______ ___  ____  _____
+  / /   / / / / __ `__ \/ __ \/ ___/
+ / /___/ /_/ / / / / / / /_/ (__  ) 
+/_____/\__,_/_/ /_/ /_/\____/____/  
          """)
         file_name = input('Enter file name: ')
         f = open(file_name, "r")

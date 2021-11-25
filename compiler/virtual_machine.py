@@ -82,7 +82,6 @@ class VirtualMachine:
                     
                     funcParams = []
                     params = funcElements[2].split('#')
-                    print(params)
                     if params[0] != '':
                         for param in params:
                             paramElements = param.split("!")

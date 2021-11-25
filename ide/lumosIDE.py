@@ -18,9 +18,9 @@ def runCode():
     command = f'python3 ../compiler/parser.py'
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    outputResult, error = process.communicate()
-    output.insert('1.0', outputResult)
-    output.insert('1.0', error)
+    parsedResult, error = process.communicate()
+    parsedEditor.insert('1.0', parsedResult)
+    parsedEditor.insert('1.0', error)
 
 def openFile():
     path = askopenfilename(filetypes=[('Lumos Files', '*.nox')])
@@ -41,9 +41,9 @@ def saveFileAs():
         code = textEditor.get('1.0', END)
         file.write(code)
 
-quadrupleDisplay = Text(width=40)
-quadrupleDisplay.config(bg='black',fg='#1dd605', state='disabled')
-quadrupleDisplay.pack(side=RIGHT)
+parsedEditor = Text(width=40)
+parsedEditor.config(bg='black',fg='#1dd605', state='disabled')
+parsedEditor.pack(side=RIGHT)
 
 textEditor = Text()
 textEditor.config(bg='black',fg='white', insertbackground='white')
